@@ -4,6 +4,7 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import BadgeScanner from '@/components/BadgeScanner';
 import {
   logout,
   getRegistrations,
@@ -529,14 +530,7 @@ export default function AdminDashboardPage() {
           {tab === 'checkin' && (
             <div style={styles.checkinGrid} className="admin-checkin-grid">
               <div style={styles.scannerCard}>
-                <h3 style={{ margin: '0 0 6px', fontSize: 18 }}>Badge Scanner</h3>
-                <p style={{ color: '#8A8E96', fontSize: 13, margin: '0 0 18px' }}>
-                  Point the camera at a delegate&apos;s badge QR to validate &amp; check them in.
-                </p>
-                <div style={styles.scannerFrame}>
-                  <div style={styles.scannerReticle} />
-                  <div style={styles.scannerOverlay}>Camera — coming soon</div>
-                </div>
+                <BadgeScanner onCheckInSuccess={() => { refreshRegs(); refreshCheckins(); }} />
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>

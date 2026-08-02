@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { addRegistration } from '@/lib/nexus-store';
 import { useToast } from '@/lib/toast';
+import QrCode from '@/components/QrCode';
 
 const QUALIFICATIONS = ['High School', 'Diploma', 'Undergraduate', 'Postgraduate', 'Doctorate', 'Other'];
 const GRAD_YEARS = Array.from({ length: 53 }, (_, i) => 2032 - i);
@@ -193,6 +194,20 @@ export default function RegistrationPage() {
           <div style={styles.idBadge}>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--teal)' }}>Registration ID</span>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 700, color: 'var(--ink)', letterSpacing: '0.04em' }}>{resultId}</span>
+          </div>
+
+          {/* QR Code in success popup */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, margin: '16px 0' }}>
+            <div style={{
+              width: 110, height: 110, borderRadius: '12px', border: '2px solid var(--gold)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            }}>
+              <QrCode text={resultId} size={100} />
+            </div>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8A8E96' }}>
+              Scan to verify badge
+            </span>
           </div>
           {form.photoPreview && (
             <div style={{ margin: '16px auto', width: 90, height: 90, borderRadius: '50%', overflow: 'hidden', border: '3px solid var(--gold)' }}>

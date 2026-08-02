@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { findRegistration } from '@/lib/nexus-store';
 import type { Registration } from '@/lib/nexus-store';
+import QrCode from '@/components/QrCode';
 
 export default function SuccessPage() {
   const [record, setRecord] = useState<Registration | null>(null);
@@ -80,6 +81,14 @@ export default function SuccessPage() {
           </p>
 
           <div style={styles.regIdBadge}>{record.regId}</div>
+
+          {/* QR Code for badge */}
+          <div style={styles.qrSection}>
+            <div style={styles.qrBox}>
+              <QrCode text={record.regId} size={120} />
+            </div>
+            <span style={styles.qrLabel}>Scan to verify badge</span>
+          </div>
 
           <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>
             <div style={{ width: 88, height: 88, borderRadius: '50%', overflow: 'hidden', border: '3px solid var(--teal)', background: '#eee' }}>
@@ -186,6 +195,31 @@ const styles: Record<string, React.CSSProperties> = {
     margin: '18px auto',
     wordBreak: 'break-all',
     textAlign: 'center' as const,
+  },
+  qrSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 8,
+    margin: '16px 0',
+  },
+  qrBox: {
+    width: 120,
+    height: 120,
+    border: '2px solid var(--gold)',
+    borderRadius: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: '#fff',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+  },
+  qrLabel: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: 11,
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase' as const,
+    color: '#8A8E96',
   },
   summary: {
     textAlign: 'left',
