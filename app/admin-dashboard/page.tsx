@@ -455,10 +455,10 @@ export default function AdminDashboardPage() {
                         <td style={styles.td}>
                           <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
                             <button className="action-btn" onClick={() => openRegModal('view', r)}>View</button>
-                            <button className="action-btn" onClick={() => openRegModal('edit', r)}>Edit</button>
-                            <button className="action-btn" disabled={r.checkedIn} onClick={() => toggleCheckIn(r)} style={r.checkedIn ? { background: 'var(--teal)', color: '#fff', border: 'none', opacity: 0.8 } : undefined}>{r.checkedIn ? '✓ Checked' : 'Check-In'}</button>
-                            <Link className="action-btn" href={`/id-card?regId=${r.regId}`} style={{ textDecoration: 'none' }}>ID Card</Link>
-                            <button className="action-btn danger" onClick={() => handleDeleteReg(r)}>Delete</button>
+                            {r.paymentStatus !== 'verified' && (
+                              <button className="action-btn" style={{ background: 'var(--gold)', color: '#0A2647', fontWeight: 600 }} onClick={() => handleVerifyPayment(r.regId)}>Verify Payment</button>
+                            )}
+                            <Link className="action-btn" href={`/id-card?regId=${r.regId}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>Screenshot ID Card</Link>
                           </div>
                         </td>
                       </tr>

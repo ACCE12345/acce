@@ -35,7 +35,36 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
     }
   }, []);
 
-  const startCamera = async () => {
+  const startScanning = useCallback(() => {
+    if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
+    scanIntervalRef.current = setInterval(async () => {
+      if (!videoRef.current || !canvasRef.current || scanStatus !== 'scanning') return;
+
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+
+      if (!ctx || video.readyState !== video.HAVE_ENOUGH_DATA) return;
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const decoded = await decodeQRCode(canvas);
+
+      if (decoded) {
+        if (/^[A-Z]{3}-/.test(decoded)) {
+          setScanResult(decoded);
+          setScanStatus('success');
+          clearInterval(scanIntervalRef.current!);
+
+          processScan(decoded);
+        }
+      }
+    }, 500);
+  }, [scanStatus, decodeQRCode]);
+
+  const startCamera = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -54,53 +83,33 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
         setScanStatus('scanning');
         setScanResult(null);
 
-        // Start scanning loop
         startScanning();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Camera error:', error);
       setScanStatus('error');
-      showToast(
-        error instanceof Error && error.name === 'NotAllowedError'
-          ? 'Camera permission denied. Please allow camera access in your browser settings.'
-          : 'Failed to access camera. Please try again.',
-        'error'
-      );
-    }
-  };
+      const errMsg = error?.message || '';
+      let toastMsg = 'Failed to access camera. Please try again.';
+      let helpMsg = 'If the issue persists, check your browser permissions.';
 
-  const startScanning = () => {
-    if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
-    scanIntervalRef.current = setInterval(async () => {
-      if (!videoRef.current || !canvasRef.current || scanStatus !== 'scanning') return;
-
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-
-      if (!ctx || video.readyState !== video.HAVE_ENOUGH_DATA) return;
-
-      // Draw current video frame to canvas
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      // Try to decode QR code
-      const decoded = await decodeQRCode(canvas);
-
-      if (decoded) {
-        // Validate it looks like a registration ID
-        if (/^[A-Z]{3}-/.test(decoded)) {
-          setScanResult(decoded);
-          setScanStatus('success');
-          clearInterval(scanIntervalRef.current!);
-
-          // Process the scanned registration
-          processScan(decoded);
-        }
+      if (errMsg.includes('Permission dismissed') || errMsg.includes('Permission denied')) {
+        toastMsg = 'Camera permission was denied or dismissed.';
+        helpMsg = 'Please allow camera access in your browser settings and try again.';
+      } else if (errMsg.includes('NotAllowedError') || error?.name === 'NotAllowedError') {
+        toastMsg = 'Camera access not allowed.';
+        helpMsg = 'Please grant camera permission in your browser settings.';
+      } else if (errMsg.includes('NotFoundError') || error?.name === 'NotFoundError') {
+        toastMsg = 'No camera found on this device.';
+      } else if (errMsg.includes('NotReadableError') || error?.name === 'NotReadableError') {
+        toastMsg = 'Camera is in use by another application.';
+        helpMsg = 'Please close other apps using the camera and try again.';
+      } else if (errMsg.includes('Secure')) {
+        toastMsg = 'Camera requires a secure connection (HTTPS).';
       }
-    }, 500); // Scan every 500ms
-  };
+
+       showToast(`${toastMsg} ${helpMsg}`, 'error');
+    }
+  }, [showToast, startScanning]);
 
   const processScan = async (regId: string) => {
     try {
@@ -162,6 +171,9 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
         <p style={{ color: '#8A8E96', fontSize: 14, margin: '8px 0 0' }}>
           Point the camera at a delegate&apos;s badge QR to validate &amp; check them in.
         </p>
+        <p style={{ color: '#8A8E96', fontSize: 12, margin: '4px 0 0' }}>
+          Requires camera permission. Click "Activate Camera" and allow access when prompted.
+        </p>
       </div>
 
       <div style={styles.scannerViewport}>
@@ -222,8 +234,14 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
               Activate Camera
             </button>
             {scanStatus === 'error' && (
-              <div style={{ marginTop: 12, color: '#EF4444', fontSize: 13, textAlign: 'center' }}>
+              <div style={{ marginTop: 12, color: '#EF4444', fontSize: 13, textAlign: 'center', padding: '8px 12px' }}>
                 Camera access failed. Check permissions and try again.
+                <br />
+                <span style={{ opacity: 0.8, fontSize: 11 }}>
+                  Ensure the site has camera permission in your browser settings.
+                  <br />
+                  Note: Camera access requires a secure connection (HTTPS).
+                </span>
               </div>
             )}
           </div>
