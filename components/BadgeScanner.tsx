@@ -66,13 +66,26 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
 
   const startCamera = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-      });
+      let stream: MediaStream;
+      
+      try {
+        // Try environment-facing camera first (mobile devices)
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+        });
+      } catch {
+        // Fall back to any available camera (desktop/front-facing)
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+        });
+      }
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -107,7 +120,7 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
         toastMsg = 'Camera requires a secure connection (HTTPS).';
       }
 
-       showToast(`${toastMsg} ${helpMsg}`, 'error');
+      showToast(`${toastMsg} ${helpMsg}`, 'error');
     }
   }, [showToast, startScanning]);
 
