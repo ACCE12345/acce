@@ -39,7 +39,11 @@ function IdCardContent() {
   }, [searchParams]);
 
   const handleDownloadCard = async () => {
-    if (!cardRef.current) return;
+    if (!cardRef.current || !record) return;
+    if (record.paymentStatus !== 'verified') {
+      showToast('ID card download requires payment verification by an admin.', 'error');
+      return;
+    }
     try {
       showToast('Preparing your ID card image…');
       await captureElementAsImage(cardRef.current, `${record?.regId || 'id'}-idcard.png`);
@@ -51,6 +55,10 @@ function IdCardContent() {
 
   const handleDownloadQR = useCallback(async () => {
     if (!record) return;
+    if (record.paymentStatus !== 'verified') {
+      showToast('QR code download requires payment verification by an admin.', 'error');
+      return;
+    }
     try {
       const dataUrl = await QRCodeLib.toDataURL(record.regId, {
         width: 300, margin: 2,
@@ -148,15 +156,23 @@ function IdCardContent() {
               </div>
               <span style={styles.qrLabel}>Scan to verify</span>
             </div>
+
+            {record.paymentStatus !== 'verified' && (
+              <div style={{ marginTop: 12, padding: '10px 16px', background: 'rgba(255,184,38,0.1)', borderRadius: 8, textAlign: 'center' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Payment pending admin verification — download disabled
+                </span>
+              </div>
+            )}
           </div>
 
           <div style={styles.idcardStatus}>Registered Participant</div>
         </div>
 
-        <div style={styles.actions}>
-          <button className="btn btn-gold" onClick={handleDownloadCard}>Download ID Card</button>
-          <button className="btn" style={{ background: 'transparent', color: 'var(--ink)', border: '1px solid var(--line)' }} onClick={handleDownloadQR}>
-            Download QR Code
+          <div style={styles.actions}>
+            <button className="btn btn-gold" onClick={handleDownloadCard} disabled={record.paymentStatus !== 'verified'}>Download ID Card</button>
+            <button className="btn" style={{ background: 'transparent', color: 'var(--ink)', border: '1px solid var(--line)' }} onClick={handleDownloadQR} disabled={record.paymentStatus !== 'verified'}>
+              Download QR Code
           </button>
           <Link href="/verify" className="btn btn-dark" style={{ textDecoration: 'none' }}>Verify a Badge</Link>
         </div>
