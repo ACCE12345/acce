@@ -263,7 +263,7 @@ export default function RegistrationPage() {
                 <Err errors={errors} field="fullName" />
               </Field>
               <Field label="Profile Photo" required>
-                <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" style={{ display: 'none' }} onChange={handlePhoto} />
+                <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handlePhoto} />
                 <div className="reg-upload" style={styles.uploadBox} onClick={() => photoRef.current?.click()}>
                   {form.photoPreview ? (
                     <Image src={form.photoPreview} alt="Preview" width={80} height={80} style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--gold)' }} />
@@ -360,7 +360,7 @@ export default function RegistrationPage() {
               </div>
 
               <Field label="Upload Payment Screenshot" required>
-                <input ref={payRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" style={{ display: 'none' }} onChange={handlePayment} />
+                <input ref={payRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handlePayment} />
                 <div className="reg-upload" style={styles.uploadBox} onClick={() => payRef.current?.click()}>
                   {form.paymentScreenshotPreview ? (
                      <div style={{ color: 'var(--teal)', fontWeight: 600, fontSize: 14 }}>Screenshot uploaded</div>
