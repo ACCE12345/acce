@@ -126,7 +126,7 @@ function IdCardContent() {
             <span style={styles.brandMark}>
               <Image src="/img/logo.png" alt="ACCE" width={34} height={34} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </span>
-            <h3 style={styles.headTitle}>ACCE · Convergence Summit</h3>
+            <h3 style={styles.headTitle}>ACCE · Build Expo</h3>
             <div style={styles.photoCircle}>
               {record.photo && <img src={record.photo} alt={record.fullName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
             </div>

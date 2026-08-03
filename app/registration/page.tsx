@@ -226,7 +226,7 @@ export default function RegistrationPage() {
       <div className="reg-banner" style={styles.headerBanner}>
         <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 28px', position: 'relative', zIndex: 1 }}>
           <span style={styles.eyebrow}>Registration</span>
-          <h1 style={styles.bannerTitle}>ACCE (India) Convergence Summit</h1>
+          <h1 style={styles.bannerTitle}>ACCE (India) Build Expo</h1>
           <p style={{ color: '#B8CCE4', fontSize: 15, margin: 0 }}>Complete the form below to secure your delegate pass</p>
         </div>
       </div>

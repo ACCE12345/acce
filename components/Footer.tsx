@@ -13,7 +13,7 @@ export default function Footer() {
               ACCE (India)
             </Link>
             <p style={{ marginTop: 16, maxWidth: 280 }}>
-              The Convergence Summit — 25–26 Sep 2026, ACCE Warangal Centre.
+              The Build Expo — 25–26 Sep 2026, ACCE Warangal Centre.
             </p>
           </div>
 

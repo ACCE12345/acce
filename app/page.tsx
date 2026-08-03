@@ -90,7 +90,7 @@ export default function Home() {
             </button>
             <Image
               src="/img/poste.jpeg"
-              alt="ACCE Convergence Summit 2026 - Event Poster"
+              alt="ACCE Build Expo 2026 - Event Poster"
               width={420}
               height={595}
               style={{ width: '100%', height: 'auto', display: 'block' }}
@@ -139,7 +139,7 @@ export default function Home() {
             }}>
               <Image
                 src="/img/poste.jpeg"
-                alt="ACCE Convergence Summit 2026 - Event Poster"
+                alt="ACCE Build Expo 2026 - Event Poster"
                 width={320}
                 height={452}
                 style={{ width: '100%', height: 'auto', display: 'block', pointerEvents: 'none' }}

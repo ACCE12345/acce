@@ -29,7 +29,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: 'ACCE (India) — Warangal Centre',
   description:
-    'ACCE (India) Warangal Centre: a two-day leadership summit on the convergence of technology, capital and industry.',
+    'ACCE (India) Warangal Centre: a two-day leadership summit on the build of technology, capital and industry.',
 };
 
 export default function RootLayout({

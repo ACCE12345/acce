@@ -117,7 +117,7 @@ export default function DownloadIdCard({ variant = 'light' }: { variant?: 'light
                   <Image src="/img/logo.png" alt="ACCE" width={34} height={34} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <h3 style={{ color: '#fff', fontSize: 15, letterSpacing: '0.06em', textTransform: 'uppercase' as const, fontFamily: 'var(--font-mono)', margin: 0 }}>
-                  ACCE · Convergence Summit
+                  ACCE · Build Expo
                 </h3>
                 <div style={{
                   width: 100, height: 100, borderRadius: '50%', border: '4px solid #fff',
