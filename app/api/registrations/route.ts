@@ -37,7 +37,6 @@ export async function POST(request: NextRequest) {
     const state = (formData.get('state') as string || '').trim();
     const country = (formData.get('country') as string || 'India').trim();
     const pin = (formData.get('pin') as string || '').trim();
-    const address = (formData.get('address') as string || '').trim();
     const isACCEMember = formData.get('isACCEMember') === 'true';
     const paymentAmount = parseInt(formData.get('paymentAmount') as string || '0', 10);
 
@@ -75,7 +74,6 @@ export async function POST(request: NextRequest) {
       state,
       country,
       pin,
-      address,
       is_acce_member: isACCEMember,
       payment_amount: paymentAmount,
       payment_screenshot_url: screenshotUrl,

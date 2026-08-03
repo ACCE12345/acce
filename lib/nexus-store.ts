@@ -10,7 +10,6 @@ export interface Registration {
   state: string;
   country: string;
   pin: string;
-  address: string;
   isACCEMember: boolean;
   paymentAmount: number;
   paymentScreenshot: string;
@@ -58,7 +57,6 @@ function regApiToUI(r: Record<string, unknown>): Registration {
     state: (r.state as string) || '',
     country: (r.country as string) || 'India',
     pin: (r.pin as string) || '',
-    address: (r.address as string) || '',
     isACCEMember: r.is_acce_member as boolean,
     paymentAmount: r.payment_amount as number,
     paymentScreenshot: (r.payment_screenshot_url as string) || '',

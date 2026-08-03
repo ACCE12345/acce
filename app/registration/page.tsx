@@ -29,7 +29,6 @@ interface FormData {
   state: string;
   country: string;
   pin: string;
-  address: string;
   isACCEMember: boolean;
   paymentScreenshot: File | null;
   paymentScreenshotPreview: string;
@@ -47,7 +46,6 @@ const INITIAL: FormData = {
   state: '',
   country: 'India',
   pin: '',
-  address: '',
   isACCEMember: false,
   paymentScreenshot: null,
   paymentScreenshotPreview: '',
@@ -94,7 +92,6 @@ export default function RegistrationPage() {
       if (!form.city.trim()) e.city = 'City is required';
       if (!form.state) e.state = 'State is required';
       if (!form.country.trim()) e.country = 'Country is required';
-      if (!form.address.trim()) e.address = 'Address is required';
     } else if (s === 3) {
       if (!form.paymentScreenshot) e.paymentScreenshot = 'Payment screenshot is required';
     } else if (s === 4) {
@@ -139,7 +136,6 @@ export default function RegistrationPage() {
       fd.append('state', form.state);
       fd.append('country', form.country.trim());
       fd.append('pin', form.pin.trim());
-      fd.append('address', form.address.trim());
       fd.append('isACCEMember', String(form.isACCEMember));
       fd.append('paymentAmount', String(paymentAmount));
       if (form.paymentScreenshot) fd.append('paymentScreenshot', form.paymentScreenshot);
@@ -308,10 +304,6 @@ export default function RegistrationPage() {
               </Field>
               <Field label="PIN / ZIP Code">
                 <input className="reg-input" style={styles.input} placeholder="PIN or ZIP code (optional)" maxLength={12} value={form.pin} onChange={(e) => set('pin', e.target.value)} />
-              </Field>
-              <Field label="Address" required>
-                <textarea className="reg-input" style={{ ...styles.input, minHeight: 80, resize: 'vertical' }} placeholder="Full address" maxLength={300} value={form.address} onChange={(e) => set('address', e.target.value)} />
-                <Err errors={errors} field="address" />
               </Field>
             </>
           )}
