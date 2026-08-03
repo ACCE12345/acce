@@ -221,22 +221,6 @@ p{margin:0 0 1em;color:#4A5568;}
 .hero-meta strong{display:block;color:var(--paper);font-size:16px;font-weight:600;margin-top:4px;text-shadow:0 1px 4px rgba(0,0,0,.3);}
 .hero-actions{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;}
 
-/* ---------- Word-stagger text reveal ---------- */
-.text-split{overflow:hidden;}
-.text-split .word{
-  display:inline-block;
-  transform:translateY(115%);
-  opacity:0;
-  animation:wordUp .85s cubic-bezier(.19,1,.22,1) forwards;
-  animation-delay:calc(var(--w) * 55ms);
-}
-@keyframes wordUp{
-  to{transform:translateY(0);opacity:1;}
-}
-@media (prefers-reduced-motion: reduce){
-  .text-split .word{animation:none;transform:none;opacity:1;}
-}
-
 /* ---------- Committee Members ---------- */
 .committee-grid{
   display:grid;
@@ -302,30 +286,6 @@ p{margin:0 0 1em;color:#4A5568;}
 .highlight-card .tag{font-family:var(--font-mono);font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;font-weight:600;}
 .highlight-card h4{font-size:21px;margin:12px 0 8px;color:var(--ink);}
 
-/* ---------- Sponsorship teaser ---------- */
-.tier-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
-.tier-card{
-  background:var(--ink-soft);border:1px solid var(--line-dark);border-radius:var(--radius-md);
-  padding:30px 26px;display:flex;flex-direction:column;gap:16px;
-  transition:transform .3s cubic-bezier(.2,.8,.2,1), border-color .3s ease, box-shadow .3s ease;
-}
-.tier-card:hover{transform:translateY(-8px);border-color:var(--gold);box-shadow:0 20px 44px -16px rgba(68,132,209,.45);}
-.tier-card.featured{border-color:var(--gold);background:linear-gradient(160deg,var(--ink-softer),var(--ink-soft));}
-.tier-card.featured::after{
-  content:'Popular';position:absolute;top:14px;right:14px;
-  background:var(--gold);color:var(--ink);font-family:var(--font-mono);
-  font-size:10px;letter-spacing:.08em;text-transform:uppercase;
-  padding:4px 10px;border-radius:2px;
-}
-.tier-card{position:relative;overflow:visible;}
-.tier-name{font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.1em;font-size:12.5px;color:var(--gold-bright);}
-.tier-price{font-family:var(--font-display);font-size:34px;color:var(--paper);}
-.tier-card ul{list-style:none;margin:0;padding:0;flex:1;}
-.tier-card li{
-  font-size:13.5px;color:#AFC5E0;padding:9px 0;border-top:1px solid var(--line-dark);
-}
-.tier-card li:first-child{border-top:none;}
-
 /* ---------- Registration CTA banner ---------- */
 .cta-banner{
   background:#09274C;color:var(--paper);
@@ -363,18 +323,6 @@ p{margin:0 0 1em;color:#4A5568;}
 .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease, transform .7s ease;}
 .reveal.in{opacity:1;transform:translateY(0);}
 
-.page-banner{
-  background:var(--grad-dark);color:var(--paper);
-  padding:150px 0 60px;
-  position:relative;overflow:hidden;
-}
-.page-banner::before{
-  content:'';position:absolute;width:520px;height:520px;top:-260px;right:-140px;border-radius:50%;
-  background:radial-gradient(circle at 50% 50%, rgba(124,172,227,0.4), transparent 70%);
-  filter:blur(90px);opacity:.6;pointer-events:none;
-}
-.page-banner .container{position:relative;z-index:1;}
-.page-banner h1{color:var(--paper);font-size:clamp(30px,4vw,48px);}
 .breadcrumb{font-family:var(--font-mono);font-size:12px;color:#8FA9CC;margin-bottom:16px;}
 .breadcrumb a:hover{color:var(--gold-bright);}
 
@@ -383,7 +331,6 @@ p{margin:0 0 1em;color:#4A5568;}
    RESPONSIVE — Tablet
    ========================================================= */
 @media (max-width:1000px){
-  .tier-grid{grid-template-columns:repeat(2,1fr);}
   .committee-grid{grid-template-columns:repeat(3,1fr);}
 }
 
@@ -472,18 +419,9 @@ p{margin:0 0 1em;color:#4A5568;}
   .footer-grid{grid-template-columns:1fr;gap:24px;}
   .footer-bottom{flex-direction:column;text-align:center;}
 
-  /* Toast */
-  .toast{min-width:auto;max-width:calc(100vw - 32px);font-size:13px;padding:12px 14px;}
-  .toast-stack{left:16px;right:16px;bottom:12px;}
-
   /* Contact form */
   .contact-form input,.contact-form textarea{padding:14px 12px;font-size:16px;}
   .contact-card strong{font-size:16px;}
-
-  /* Download ID section */
-  .download-id-form{flex-direction:column;}
-  .download-id-form input{min-height:48px;}
-  .download-id-form button{width:100%;justify-content:center;}
 
   /* Sponsorship form mobile */
   .sponsor-form-grid{grid-template-columns:1fr !important;}
@@ -772,50 +710,6 @@ p{margin:0 0 1em;color:#4A5568;}
     max-width: 180px !important;
     border-width: 2px !important;
   }
-}
-
-/* =========================================================
-   ID Card page responsive
-   ========================================================= */
-@media (max-width:600px){
-  .idcard{width:92vw !important;max-width:340px !important;}
-  .idcard-head{padding:18px 14px 28px !important;}
-  .head-title{font-size:14px !important;}
-  .idcard-body{padding:20px 16px !important;}
-  .idcard-name{font-size:20px !important;}
-  .idcard-detail{flex-direction:column !important;gap:2px !important;}
-  .idcard-qr-box{width:100px !important;height:100px !important;}
-  .idcard-actions{flex-direction:column !important;gap:10px !important;}
-  .idcard-actions .btn{width:100% !important;justify-content:center !important;}
-}
-
-/* =========================================================
-   Sponsorship page responsive
-   ========================================================= */
-@media (max-width:600px){
-  .sponsor-form{padding:20px 16px !important;}
-  .sponsor-banner{padding:110px 0 40px !important;}
-}
-
-/* =========================================================
-   Verify page responsive
-   ========================================================= */
-@media (max-width:600px){
-  .verify-card{padding:28px 20px !important;}
-}
-
-/* =========================================================
-   Success page responsive
-   ========================================================= */
-@media (max-width:600px){
-  .success-card{padding:30px 20px !important;}
-}
-
-/* =========================================================
-   Admin login responsive
-   ========================================================= */
-@media (max-width:600px){
-  .login-card{padding:30px 20px !important;}
 }
 
 /* =========================================================

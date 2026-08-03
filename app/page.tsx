@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import HeroSlideshow from '@/components/HeroSlideshow';
@@ -20,6 +20,11 @@ const COMMITTEE = [
 
 export default function Home() {
   const [showPoster, setShowPoster] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowPoster(true), 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <>

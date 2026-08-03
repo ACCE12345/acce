@@ -11,11 +11,12 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const scanStatusRef = useRef<'idle' | 'scanning' | 'success' | 'error'>('idle');
+  const scanStatusRef = useRef<'idle' | 'scanning' | 'success' | 'error' | 'already-checked-in'>('idle');
 
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [scanResult, setScanResult] = useState<string | null>(null);
-  const [scanStatus, setScanStatus] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle');
+  const [scanStatus, setScanStatus] = useState<'idle' | 'scanning' | 'success' | 'error' | 'already-checked-in'>('idle');
+  const [alreadyCheckedInName, setAlreadyCheckedInName] = useState<string>('');
 
   const processScan = useCallback(async (regId: string) => {
     try {
@@ -30,7 +31,10 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
 
       if (rec.checkedIn) {
         showToast(`${rec.fullName} is already checked in.`, 'default');
+        setAlreadyCheckedInName(rec.fullName);
         setScanResult(regId);
+        setScanStatus('already-checked-in');
+        scanStatusRef.current = 'already-checked-in';
         return;
       }
 
@@ -225,9 +229,9 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
             {scanStatus === 'success' && scanResult && (
               <div style={styles.scanOverlay}>
                 <div style={styles.scanSuccess}>
-                  <div style={{ fontSize: 32, marginBottom: 8 }}>✅</div>
+                  <div style={{ fontSize: 32, marginBottom: 8, color: '#22c55e', fontWeight: 700 }}>&#10003;</div>
                   <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
-                    Scanned: {scanResult}
+                    Checked In: {scanResult}
                   </div>
                   <button
                     onClick={resetScanner}
@@ -238,10 +242,33 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
                 </div>
               </div>
             )}
+
+            {scanStatus === 'already-checked-in' && (
+              <div style={{ ...styles.scanOverlay, background: 'rgba(180,40,40,0.85)' }}>
+                <div style={styles.scanSuccess}>
+                  <div style={{ fontSize: 32, marginBottom: 8, color: '#EF4444', fontWeight: 700 }}>&#10007;</div>
+                  <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', marginBottom: 4 }}>
+                    ALREADY CHECKED IN
+                  </div>
+                  <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
+                    {alreadyCheckedInName}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 12 }}>
+                    {scanResult}
+                  </div>
+                  <button
+                    onClick={resetScanner}
+                    style={{ ...styles.actionButton, background: '#fff', color: 'var(--brick)' }}
+                  >
+                    Scan Next
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         ) : (
           <div style={styles.scannerPlaceholder}>
-            <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.3 }}>📷</div>
+            <div style={{ fontSize: 36, marginBottom: 16, opacity: 0.3, fontFamily: 'var(--font-mono)', color: '#9CA3AF' }}>[CAM]</div>
             <div style={{ fontSize: 16, marginBottom: 20, color: '#9CA3AF' }}>
               No camera active
             </div>
