@@ -149,8 +149,9 @@ export default function RegistrationPage() {
       sessionStorage.setItem('nexus_last_reg', result.regId);
       setShowSuccess(true);
       showToast('Registration successful!', 'success');
-    } catch {
-      showToast('Something went wrong. Please try again.', 'error');
+    } catch (err: any) {
+      const msg = err?.message || err?.error || 'Something went wrong. Please try again.';
+      showToast(typeof msg === 'string' ? msg : 'Something went wrong. Please try again.', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -264,7 +265,7 @@ export default function RegistrationPage() {
               </Field>
               <Field label="Profile Photo" required>
                 <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handlePhoto} />
-                <div className="reg-upload" style={styles.uploadBox} onClick={() => photoRef.current?.click()}>
+                <div className="reg-upload" role="button" tabIndex={0} style={styles.uploadBox} onClick={() => photoRef.current?.click()} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') photoRef.current?.click(); }}>
                   {form.photoPreview ? (
                     <Image src={form.photoPreview} alt="Preview" width={80} height={80} style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--gold)' }} />
                   ) : (
@@ -361,7 +362,7 @@ export default function RegistrationPage() {
 
               <Field label="Upload Payment Screenshot" required>
                 <input ref={payRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handlePayment} />
-                <div className="reg-upload" style={styles.uploadBox} onClick={() => payRef.current?.click()}>
+                <div className="reg-upload" role="button" tabIndex={0} style={styles.uploadBox} onClick={() => payRef.current?.click()} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') payRef.current?.click(); }}>
                   {form.paymentScreenshotPreview ? (
                      <div style={{ color: 'var(--teal)', fontWeight: 600, fontSize: 14 }}>Screenshot uploaded</div>
                   ) : (

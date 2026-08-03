@@ -451,7 +451,8 @@ p{margin:0 0 1em;color:#4A5568;}
   .reg-btn{width:100% !important;justify-content:center !important;}
 }
 .reg-input:focus{border-color:var(--gold) !important;box-shadow:0 0 0 3px rgba(68,132,209,0.15) !important;}
-.reg-upload:hover{border-color:var(--gold) !important;}
+.reg-upload{border:2px dashed var(--line);border-radius:10px;padding:24px;cursor:pointer;transition:border-color .2s,background .2s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.reg-upload:hover{border-color:var(--gold) !important;background:rgba(212,168,72,0.04);}
 .reg-radio:hover{border-color:var(--gold) !important;}
 .reg-check:hover{border-color:var(--gold) !important;}
 .reg-btn:hover{transform:translateY(-2px);}
