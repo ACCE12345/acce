@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { findRegistrationByMobile, captureElementAsImage, type Registration } from '@/lib/nexus-store';
@@ -145,9 +145,6 @@ export default function DownloadIdCard({ variant = 'light' }: { variant?: 'light
                 <div style={{ textAlign: 'left', marginTop: 22, borderTop: '1px dashed rgba(10,38,71,0.12)', paddingTop: 18 }}>
                   {[
                     ['Reg. ID', record.regId],
-                    ['Qualification', record.qualification || '—'],
-                    ['College / Company', record.orgName || '—'],
-                    ['Course / Branch', record.courseBranch || '—'],
                     ['Email', record.email],
                     ['Phone', `+91 ${record.mobile}`],
                   ].map(([label, value]) => (
@@ -195,6 +192,11 @@ export default function DownloadIdCard({ variant = 'light' }: { variant?: 'light
               >
                 View Full Card
               </Link>
+            </div>
+            <div style={{ marginTop: 24, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 12, color: '#8A8E96' }}>
+              Powered by
+              <img src="/img/a+.png" alt="A+ Tech Services" style={{ height: 18, width: 'auto', verticalAlign: 'middle' }} />
+              A+ Tech Services
             </div>
           </div>
         )}

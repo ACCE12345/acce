@@ -98,8 +98,6 @@ function VerifyContent() {
               <div style={styles.verifyBody}>
                 <SummaryRow label="Name" value={record.full_name as string} />
                 <SummaryRow label="Reg. ID" value={record.reg_id as string} />
-                <SummaryRow label="Qualification" value={(record.qualification as string) || '—'} />
-                <SummaryRow label="College / Company" value={(record.org_name as string) || '—'} />
                 <SummaryRow label="Check-In" value={record.checked_in ? `Checked in${record.checked_in_at ? ' · ' + new Date(record.checked_in_at as string).toLocaleString() : ''}` : 'Not checked in'} />
               </div>
             </div>

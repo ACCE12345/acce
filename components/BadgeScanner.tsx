@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useToast } from '@/lib/toast';
 import { findRegistration, checkIn } from '@/lib/nexus-store';
 import type { Registration } from '@/lib/nexus-store';
@@ -11,22 +11,52 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const scanStatusRef = useRef<'idle' | 'scanning' | 'success' | 'error'>('idle');
 
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [scanResult, setScanResult] = useState<string | null>(null);
   const [scanStatus, setScanStatus] = useState<'idle' | 'scanning' | 'success' | 'error'>('idle');
 
+  const processScan = useCallback(async (regId: string) => {
+    try {
+      const rec = await findRegistration(regId);
+
+      if (!rec) {
+        showToast(`Registration ${regId} not found.`, 'error');
+        setScanStatus('error');
+        scanStatusRef.current = 'error';
+        return;
+      }
+
+      if (rec.checkedIn) {
+        showToast(`${rec.fullName} is already checked in.`, 'default');
+        setScanResult(regId);
+        return;
+      }
+
+      await checkIn(regId);
+      showToast(`${rec.fullName} checked in.`, 'success');
+      setScanResult(regId);
+      onCheckInSuccess?.(rec);
+
+    } catch {
+      showToast('Scan processing failed.', 'error');
+      setScanStatus('error');
+      scanStatusRef.current = 'error';
+    }
+  }, [showToast, onCheckInSuccess]);
+
   // Import jsQR dynamically to avoid SSR issues
   const decodeQRCode = useCallback(async (canvas: HTMLCanvasElement): Promise<string | null> => {
     try {
-    // @ts-ignore - jsQR module doesn't have proper TypeScript types
-    const jsQR = require('jsqr');
+      const jsQRModule = await import('jsqr');
+      const jsQR = jsQRModule.default;
       const ctx = canvas.getContext('2d');
       if (!ctx) return null;
 
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const code = jsQR(imageData.data, imageData.width, imageData.height, {
-        inversionAttempts: 'both',
+        inversionAttempts: 'attemptBoth',
       });
 
       return code?.data || null;
@@ -38,7 +68,7 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
   const startScanning = useCallback(() => {
     if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
     scanIntervalRef.current = setInterval(async () => {
-      if (!videoRef.current || !canvasRef.current || scanStatus !== 'scanning') return;
+      if (!videoRef.current || !canvasRef.current || scanStatusRef.current !== 'scanning') return;
 
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -56,13 +86,14 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
         if (/^[A-Z]{3}-/.test(decoded)) {
           setScanResult(decoded);
           setScanStatus('success');
+          scanStatusRef.current = 'success';
           clearInterval(scanIntervalRef.current!);
 
           processScan(decoded);
         }
       }
     }, 500);
-  }, [scanStatus, decodeQRCode]);
+  }, [decodeQRCode, processScan]);
 
   const startCamera = useCallback(async () => {
     try {
@@ -94,6 +125,7 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
 
         setIsCameraActive(true);
         setScanStatus('scanning');
+        scanStatusRef.current = 'scanning';
         setScanResult(null);
 
         startScanning();
@@ -124,33 +156,6 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
     }
   }, [showToast, startScanning]);
 
-  const processScan = async (regId: string) => {
-    try {
-      const rec = await findRegistration(regId);
-
-      if (!rec) {
-        showToast(`Registration ${regId} not found.`, 'error');
-        setScanStatus('error');
-        return;
-      }
-
-      if (rec.checkedIn) {
-        showToast(`${rec.fullName} is already checked in.`, 'default');
-        setScanResult(regId);
-        return;
-      }
-
-      await checkIn(regId);
-      showToast(`${rec.fullName} checked in.`, 'success');
-      setScanResult(regId);
-      onCheckInSuccess?.(rec);
-
-    } catch {
-      showToast('Scan processing failed.', 'error');
-      setScanStatus('error');
-    }
-  };
-
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -162,12 +167,14 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
     }
     setIsCameraActive(false);
     setScanStatus('idle');
+    scanStatusRef.current = 'idle';
     setScanResult(null);
   };
 
   const resetScanner = () => {
     setScanResult(null);
     setScanStatus('scanning');
+    scanStatusRef.current = 'scanning';
     startScanning();
   };
 
@@ -190,21 +197,23 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
       </div>
 
       <div style={styles.scannerViewport}>
+        <video
+          ref={videoRef}
+          style={{
+            ...styles.scannerVideo,
+            display: isCameraActive ? 'block' : 'none',
+          }}
+          playsInline
+          muted
+          autoPlay
+        />
+        <canvas
+          ref={canvasRef}
+          style={{ display: 'none' }}
+        />
+
         {isCameraActive ? (
           <>
-            <video
-              ref={videoRef}
-              style={styles.scannerVideo}
-              playsInline
-              muted
-              autoPlay
-              webkit-playsinline="true"
-            />
-            <canvas
-              ref={canvasRef}
-              style={{ ...styles.scannerCanvas, display: 'none' }}
-            />
-
             <div style={styles.scannerReticle} />
 
             {scanStatus === 'scanning' && (
@@ -298,11 +307,6 @@ const styles: Record<string, React.CSSProperties> = {
     margin: '0 auto 20px',
   },
   scannerVideo: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-  },
-  scannerCanvas: {
     width: '100%',
     height: '100%',
     objectFit: 'cover',

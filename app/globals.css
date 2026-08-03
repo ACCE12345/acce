@@ -215,13 +215,11 @@ p{margin:0 0 1em;color:#4A5568;}
 }
 .hero-kicker{font-family:var(--font-mono);color:var(--gold-bright);letter-spacing:.16em;text-transform:uppercase;font-size:13px;margin-bottom:22px;display:block;text-shadow:0 2px 8px rgba(0,0,0,.5);}
 .hero h1{font-size:clamp(42px,6vw,74px);color:var(--paper);text-shadow:0 2px 12px rgba(0,0,0,.4);}
-.hero h1 em{font-style:italic;background:linear-gradient(100deg,var(--gold-bright),var(--paper-dim) 60%,var(--gold-bright));background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 5s linear infinite;}
 .hero-sub{font-size:18px;color:#E0EAF5;max-width:600px;margin:0 auto 34px;text-shadow:0 1px 6px rgba(0,0,0,.4);}
 .hero-meta{display:flex;justify-content:center;gap:28px;margin:0 0 40px;flex-wrap:wrap;}
 .hero-meta div{font-family:var(--font-mono);font-size:12.5px;color:#B8CCE4;}
 .hero-meta strong{display:block;color:var(--paper);font-size:16px;font-weight:600;margin-top:4px;text-shadow:0 1px 4px rgba(0,0,0,.3);}
 .hero-actions{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;}
-@keyframes shine{to{background-position:200% center;}}
 
 /* ---------- Word-stagger text reveal ---------- */
 .text-split{overflow:hidden;}
@@ -399,9 +397,10 @@ p{margin:0 0 1em;color:#4A5568;}
   .cta-banner{padding:50px 0;}
   .committee-grid{grid-template-columns:repeat(2,1fr);}
   .contact-grid{grid-template-columns:1fr;gap:40px;}
-  .highlight-grid{grid-template-columns:1fr;}
+  .highlight-grid{grid-template-columns:1fr 1fr;}
   .footer-grid{grid-template-columns:1fr 1fr;gap:30px;}
   .page-banner{padding:130px 0 40px;}
+  .sponsor-form-grid{grid-template-columns:1fr;}
 }
 
 /* =========================================================
@@ -442,6 +441,11 @@ p{margin:0 0 1em;color:#4A5568;}
   .about-list li{grid-template-columns:1fr;gap:8px;}
   .about-num{padding-top:0;}
 
+  /* Highlights */
+  .highlight-grid{grid-template-columns:1fr;}
+  .highlight-card{padding:24px 20px;}
+  .highlight-card h4{font-size:18px;}
+
   /* Tiers */
   .tier-grid{grid-template-columns:1fr;gap:16px;}
   .tier-card{padding:24px 20px;}
@@ -474,6 +478,15 @@ p{margin:0 0 1em;color:#4A5568;}
 
   /* Contact form */
   .contact-form input,.contact-form textarea{padding:14px 12px;font-size:16px;}
+  .contact-card strong{font-size:16px;}
+
+  /* Download ID section */
+  .download-id-form{flex-direction:column;}
+  .download-id-form input{min-height:48px;}
+  .download-id-form button{width:100%;justify-content:center;}
+
+  /* Sponsorship form mobile */
+  .sponsor-form-grid{grid-template-columns:1fr !important;}
 }
 
 @media (max-width:400px){
@@ -483,6 +496,9 @@ p{margin:0 0 1em;color:#4A5568;}
   .member-name{font-size:12px;}
   .hero h1{font-size:24px;}
   .hero-meta{flex-direction:column;gap:8px;}
+  .highlight-card{padding:20px 16px;}
+  .highlight-card h4{font-size:16px;}
+  .highlight-card p{font-size:13px;}
 }
 
 /* ---------- Registration page responsive ---------- */
@@ -493,6 +509,8 @@ p{margin:0 0 1em;color:#4A5568;}
   .reg-progress{padding:16px 16px 12px !important;}
   .reg-popup{padding:28px 20px !important;}
   .reg-popup-btn{flex-direction:column !important;}
+  .reg-input{font-size:16px !important;} /* prevents iOS zoom on focus */
+  .reg-btn{width:100% !important;justify-content:center !important;}
 }
 .reg-input:focus{border-color:var(--gold) !important;box-shadow:0 0 0 3px rgba(68,132,209,0.15) !important;}
 .reg-upload:hover{border-color:var(--gold) !important;}
@@ -599,13 +617,10 @@ p{margin:0 0 1em;color:#4A5568;}
 }
 @media (max-width:900px){
   .admin-stats-row{grid-template-columns:repeat(2,1fr) !important;}
-  .admin-shell-grid{grid-template-columns:1fr !important;}
-  .admin-sidebar-wrap{position:relative !important;height:auto !important;flex-direction:row !important;padding:12px 18px !important;flex-wrap:wrap !important;gap:8px !important;align-items:center !important;}
-  .admin-sidebar-wrap .sidebar-nav{flex-direction:row !important;flex:unset !important;overflow-x:auto !important;gap:2px !important;}
-  .admin-sidebar-wrap .sidebar-nav li button,.admin-sidebar-wrap .sidebar-nav li a{white-space:nowrap !important;padding:8px 12px !important;margin-bottom:0 !important;font-size:11px !important;}
-  .admin-sidebar-wrap .logout-btn{margin-top:0 !important;width:auto !important;padding:8px 14px !important;}
   .admin-main-wrap{padding:16px 14px 36px !important;}
-  .admin-topbar-wrap{flex-direction:column !important;align-items:flex-start !important;}
+  .admin-topbar-wrap{flex-direction:column !important;align-items:stretch !important;padding:12px 16px !important;gap:10px !important;}
+  .admin-topbar-nav{overflow-x:auto !important;-webkit-overflow-scrolling:touch !important;justify-content:flex-start !important;}
+  .admin-topbar-nav button{padding:8px 14px !important;font-size:11px !important;}
 }
 @media (max-width:640px){
   .admin-stats-row{grid-template-columns:1fr !important;}
@@ -630,4 +645,188 @@ p{margin:0 0 1em;color:#4A5568;}
   .highlight-card:hover{transform:none;}
   .member-card:hover{transform:none;}
   .tier-card:hover{transform:none;}
+}
+
+/* Poster popup animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Poster popup mobile optimization */
+.poster-popup-overlay {
+  -webkit-overflow-scrolling: touch;
+}
+.poster-popup-card {
+  max-height: calc(100vh - 32px);
+}
+.poster-popup-close {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.poster-popup-close:active {
+  transform: scale(0.9);
+}
+
+@media (max-width: 480px) {
+  .poster-popup-card {
+    max-width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+    border-radius: 12px;
+    border-width: 2px;
+  }
+  .poster-popup-close {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+    top: 8px;
+    right: 8px;
+  }
+}
+
+@media (max-height: 600px) {
+  .poster-popup-card {
+    max-height: calc(100vh - 16px);
+  }
+}
+
+/* Prevent body scroll when popup is open */
+.poster-popup-overlay ~ * {
+  overflow: hidden;
+}
+
+/* Hero poster responsive */
+.hero-poster {
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.3));
+  cursor: pointer;
+}
+.hero-poster-card {
+  position: relative;
+}
+.hero-poster-card::after {
+  content: 'View Poster';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px;
+  background: linear-gradient(transparent, rgba(10,38,71,0.85));
+  color: var(--gold-bright);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.hero-poster:hover .hero-poster-card::after {
+  opacity: 1;
+}
+.hero-poster:hover .hero-poster-card {
+  transform: rotateY(0deg) scale(1.02) !important;
+  box-shadow: 0 30px 80px -10px rgba(0,0,0,0.6), 0 0 60px rgba(76,163,255,0.25) !important;
+}
+.hero-poster:active .hero-poster-card {
+  transform: rotateY(0deg) scale(0.98) !important;
+}
+
+@media (max-width: 900px) {
+  .hero-content {
+    flex-direction: column !important;
+    text-align: center !important;
+    padding-top: 20px;
+    max-width: 100% !important;
+  }
+  .hero-content > div:first-child {
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+  }
+  .hero-content > div:first-child h1,
+  .hero-content > div:first-child p,
+  .hero-content > div:first-child .hero-meta {
+    text-align: center !important;
+    justify-content: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  .hero-poster {
+    margin-top: 28px;
+  }
+  .hero-poster-card {
+    max-width: 240px !important;
+    transform: none !important;
+  }
+  .hero-meta {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-poster-card {
+    max-width: 180px !important;
+    border-width: 2px !important;
+  }
+}
+
+/* =========================================================
+   ID Card page responsive
+   ========================================================= */
+@media (max-width:600px){
+  .idcard{width:92vw !important;max-width:340px !important;}
+  .idcard-head{padding:18px 14px 28px !important;}
+  .head-title{font-size:14px !important;}
+  .idcard-body{padding:20px 16px !important;}
+  .idcard-name{font-size:20px !important;}
+  .idcard-detail{flex-direction:column !important;gap:2px !important;}
+  .idcard-qr-box{width:100px !important;height:100px !important;}
+  .idcard-actions{flex-direction:column !important;gap:10px !important;}
+  .idcard-actions .btn{width:100% !important;justify-content:center !important;}
+}
+
+/* =========================================================
+   Sponsorship page responsive
+   ========================================================= */
+@media (max-width:600px){
+  .sponsor-form{padding:20px 16px !important;}
+  .sponsor-banner{padding:110px 0 40px !important;}
+}
+
+/* =========================================================
+   Verify page responsive
+   ========================================================= */
+@media (max-width:600px){
+  .verify-card{padding:28px 20px !important;}
+}
+
+/* =========================================================
+   Success page responsive
+   ========================================================= */
+@media (max-width:600px){
+  .success-card{padding:30px 20px !important;}
+}
+
+/* =========================================================
+   Admin login responsive
+   ========================================================= */
+@media (max-width:600px){
+  .login-card{padding:30px 20px !important;}
+}
+
+/* =========================================================
+   General mobile utilities
+   ========================================================= */
+@media (max-width:600px){
+  h1{font-size:clamp(22px,6vw,32px) !important;}
+  h2{font-size:clamp(20px,5vw,28px) !important;}
+  h3{font-size:clamp(18px,4vw,24px) !important;}
+  .container{padding:0 16px !important;}
+  img{max-width:100%;height:auto;}
+  table{font-size:12px;}
+  th,td{padding:8px 6px !important;}
 }

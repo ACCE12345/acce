@@ -1,4 +1,3 @@
-import React from 'react';
 import Link from 'next/link';
 
 export default function Footer() {
@@ -14,7 +13,7 @@ export default function Footer() {
               ACCE (India)
             </Link>
             <p style={{ marginTop: 16, maxWidth: 280 }}>
-              The Convergence Summit — 18–20 Feb 2026, ACCE Warangal Centre.
+              The Convergence Summit — 25–26 Sep 2026, ACCE Warangal Centre.
             </p>
           </div>
 
@@ -46,7 +45,11 @@ export default function Footer() {
 
         <div className="footer-bottom">
           <span>&copy; 2026 ACCE (India) — Warangal Centre. All rights reserved.</span>
-          <span>Prototype build</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            Powered by
+            <img src="/img/a+.png" alt="A+ Tech Services" style={{ height: 20, width: 'auto', verticalAlign: 'middle' }} />
+            A+ Tech Services
+          </span>
         </div>
       </div>
     </footer>

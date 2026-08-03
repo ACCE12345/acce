@@ -157,7 +157,7 @@ export default function SponsorshipPage() {
                   Company Details
                   <span style={{ flex: 1, height: 1, background: 'var(--line)' }} />
                 </div>
-                <div style={styles.formGrid}>
+                <div className="sponsor-form-grid" style={styles.formGrid}>
                   <div style={styles.fieldFull}>
                     <FieldLabel label="Company / Organization Name" required />
                     <input type="text" maxLength={120} value={form.companyName} onChange={(e) => set('companyName', e.target.value)} style={styles.input} />
@@ -195,7 +195,7 @@ export default function SponsorshipPage() {
                   Additional Details
                   <span style={{ flex: 1, height: 1, background: 'var(--line)' }} />
                 </div>
-                <div style={styles.formGrid}>
+                <div className="sponsor-form-grid" style={styles.formGrid}>
                   <div>
                     <FieldLabel label="GST Number" />
                     <input type="text" maxLength={15} placeholder="22AAAAA0000A1Z5" value={form.gst} onChange={(e) => set('gst', e.target.value)} style={styles.input} />

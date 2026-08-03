@@ -33,11 +33,6 @@ export async function POST(request: NextRequest) {
     const fullName = (formData.get('fullName') as string || '').trim();
     const mobile = (formData.get('mobile') as string || '').trim();
     const email = (formData.get('email') as string || '').trim();
-    const qualification = (formData.get('qualification') as string || '').trim();
-    const orgName = (formData.get('orgName') as string || '').trim();
-    const courseBranch = (formData.get('courseBranch') as string || '').trim();
-    const gradYear = (formData.get('gradYear') as string || '').trim();
-    const designation = (formData.get('designation') as string || '').trim();
     const city = (formData.get('city') as string || '').trim();
     const state = (formData.get('state') as string || '').trim();
     const country = (formData.get('country') as string || 'India').trim();
@@ -49,8 +44,6 @@ export async function POST(request: NextRequest) {
     if (!fullName || fullName.length > 100) return NextResponse.json({ error: 'Invalid full name' }, { status: 400 });
     if (!/^[6-9]\d{9}$/.test(mobile)) return NextResponse.json({ error: 'Invalid mobile number' }, { status: 400 });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ error: 'Invalid email' }, { status: 400 });
-    if (!qualification) return NextResponse.json({ error: 'Qualification is required' }, { status: 400 });
-    if (!orgName || orgName.length > 120) return NextResponse.json({ error: 'Invalid college/company' }, { status: 400 });
 
     const supabase = getSupabaseServer();
 
@@ -78,11 +71,6 @@ export async function POST(request: NextRequest) {
       photo_url: photoUrl,
       mobile,
       email,
-      qualification,
-      org_name: orgName,
-      course_branch: courseBranch,
-      grad_year: gradYear,
-      designation,
       city,
       state,
       country,

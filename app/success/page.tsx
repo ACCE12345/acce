@@ -101,8 +101,6 @@ export default function SuccessPage() {
 
           <div style={styles.summary}>
             <SummaryRow label="Name" value={record.fullName} />
-            <SummaryRow label="Qualification" value={record.qualification || '—'} />
-            <SummaryRow label="College / Company" value={record.orgName || '—'} />
             <SummaryRow label="Email" value={record.email} />
             <SummaryRow label="Phone" value={`+91 ${record.mobile}`} />
             <SummaryRow label="Amount" value={`₹${record.paymentAmount}`} />

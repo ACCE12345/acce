@@ -6,11 +6,6 @@ export interface Registration {
   photo: string;
   mobile: string;
   email: string;
-  qualification: string;
-  orgName: string;
-  courseBranch: string;
-  gradYear: string;
-  designation: string;
   city: string;
   state: string;
   country: string;
@@ -40,14 +35,6 @@ export interface Sponsorship {
   createdAt: string;
 }
 
-export const MOBILE_RE = /^[6-9]\d{9}$/;
-export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-export function escapeHtml(str: string): string {
-  const map: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-  return str.replace(/[&<>"']/g, (c) => map[c]);
-}
-
 export async function captureElementAsImage(el: HTMLElement, filename = 'id-card.png'): Promise<void> {
   const { default: html2canvas } = await import('html2canvas');
   const canvas = await html2canvas(el, { useCORS: true, scale: 2, backgroundColor: '#ffffff' } as Record<string, unknown>);
@@ -67,11 +54,6 @@ function regApiToUI(r: Record<string, unknown>): Registration {
     photo: (r.photo_url as string) || '',
     mobile: r.mobile as string,
     email: r.email as string,
-    qualification: (r.qualification as string) || '',
-    orgName: (r.org_name as string) || '',
-    courseBranch: (r.course_branch as string) || '',
-    gradYear: (r.grad_year as string) || '',
-    designation: (r.designation as string) || '',
     city: (r.city as string) || '',
     state: (r.state as string) || '',
     country: (r.country as string) || 'India',
@@ -156,8 +138,6 @@ export async function updateRegistration(regId: string, updates: Partial<Registr
   if (updates.fullName !== undefined) body.fullName = updates.fullName;
   if (updates.mobile !== undefined) body.mobile = updates.mobile;
   if (updates.email !== undefined) body.email = updates.email;
-  if (updates.qualification !== undefined) body.qualification = updates.qualification;
-  if (updates.orgName !== undefined) body.orgName = updates.orgName;
   if (updates.paymentStatus !== undefined) body.paymentStatus = updates.paymentStatus;
   if (updates.checkedIn !== undefined) body.checkedIn = updates.checkedIn;
 

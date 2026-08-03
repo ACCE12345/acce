@@ -1,14 +1,12 @@
 'use client';
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { addRegistration } from '@/lib/nexus-store';
 import { useToast } from '@/lib/toast';
 import QrCode from '@/components/QrCode';
 
-const QUALIFICATIONS = ['High School', 'Diploma', 'Undergraduate', 'Postgraduate', 'Doctorate', 'Other'];
-const GRAD_YEARS = Array.from({ length: 53 }, (_, i) => 2032 - i);
 const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
   'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
@@ -27,11 +25,6 @@ interface FormData {
   photoPreview: string;
   mobile: string;
   email: string;
-  qualification: string;
-  orgName: string;
-  courseBranch: string;
-  gradYear: string;
-  designation: string;
   city: string;
   state: string;
   country: string;
@@ -50,11 +43,6 @@ const INITIAL: FormData = {
   photoPreview: '',
   mobile: '',
   email: '',
-  qualification: '',
-  orgName: '',
-  courseBranch: '',
-  gradYear: '',
-  designation: '',
   city: '',
   state: '',
   country: 'India',
@@ -67,7 +55,7 @@ const INITIAL: FormData = {
   privacyAccepted: false,
 };
 
-const STEPS = ['Personal', 'Education', 'Location', 'Membership', 'Payment', 'Terms'];
+const STEPS = ['Personal', 'Location', 'Membership', 'Payment', 'Terms'];
 
 export default function RegistrationPage() {
   const { showToast } = useToast();
@@ -103,17 +91,13 @@ export default function RegistrationPage() {
       if (!/^[6-9]\d{9}$/.test(form.mobile)) e.mobile = 'Valid 10-digit Indian mobile required';
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Valid email required';
     } else if (s === 1) {
-      if (!form.qualification) e.qualification = 'Qualification is required';
-      if (!form.orgName.trim()) e.orgName = 'College / Company is required';
-      if (!form.gradYear) e.gradYear = 'Graduation Year is required';
-    } else if (s === 2) {
       if (!form.city.trim()) e.city = 'City is required';
       if (!form.state) e.state = 'State is required';
       if (!form.country.trim()) e.country = 'Country is required';
       if (!form.address.trim()) e.address = 'Address is required';
-    } else if (s === 4) {
+    } else if (s === 3) {
       if (!form.paymentScreenshot) e.paymentScreenshot = 'Payment screenshot is required';
-    } else if (s === 5) {
+    } else if (s === 4) {
       if (!form.termsAccepted) e.termsAccepted = 'You must accept the Terms';
       if (!form.privacyAccepted) e.privacyAccepted = 'You must accept the Privacy Policy';
     }
@@ -143,7 +127,7 @@ export default function RegistrationPage() {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(5)) return;
+    if (!validateStep(4)) return;
     setSubmitting(true);
     try {
       const fd = new FormData();
@@ -151,11 +135,6 @@ export default function RegistrationPage() {
       if (form.photo) fd.append('photo', form.photo);
       fd.append('mobile', form.mobile.trim());
       fd.append('email', form.email.trim());
-      fd.append('qualification', form.qualification);
-      fd.append('orgName', form.orgName.trim());
-      fd.append('courseBranch', form.courseBranch.trim());
-      fd.append('gradYear', form.gradYear);
-      fd.append('designation', form.designation.trim());
       fd.append('city', form.city.trim());
       fd.append('state', form.state);
       fd.append('country', form.country.trim());
@@ -308,38 +287,8 @@ export default function RegistrationPage() {
             </>
           )}
 
-          {/* Step 1: Education / Professional */}
+          {/* Step 1: Location */}
           {step === 1 && (
-            <>
-              <Field label="Qualification" required>
-                <select className="reg-input" style={styles.input} value={form.qualification} onChange={(e) => set('qualification', e.target.value)}>
-                  <option value="">Select qualification</option>
-                  {QUALIFICATIONS.map((q) => <option key={q} value={q}>{q}</option>)}
-                </select>
-                <Err errors={errors} field="qualification" />
-              </Field>
-              <Field label="College / Company" required>
-                <input className="reg-input" style={styles.input} placeholder="Name of college or company" maxLength={120} value={form.orgName} onChange={(e) => set('orgName', e.target.value)} />
-                <Err errors={errors} field="orgName" />
-              </Field>
-              <Field label="Course / Branch">
-                <input className="reg-input" style={styles.input} placeholder="e.g. B.Tech CSE, MBA Finance" maxLength={100} value={form.courseBranch} onChange={(e) => set('courseBranch', e.target.value)} />
-              </Field>
-              <Field label="Graduation Year" required>
-                <select className="reg-input" style={styles.input} value={form.gradYear} onChange={(e) => set('gradYear', e.target.value)}>
-                  <option value="">Select year</option>
-                  {GRAD_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
-                </select>
-                <Err errors={errors} field="gradYear" />
-              </Field>
-              <Field label="Designation">
-                <input className="reg-input" style={styles.input} placeholder="Your designation (optional)" maxLength={80} value={form.designation} onChange={(e) => set('designation', e.target.value)} />
-              </Field>
-            </>
-          )}
-
-          {/* Step 2: Location */}
-          {step === 2 && (
             <>
               <Field label="City" required>
                 <input className="reg-input" style={styles.input} placeholder="City" maxLength={60} value={form.city} onChange={(e) => set('city', e.target.value)} />
@@ -366,8 +315,8 @@ export default function RegistrationPage() {
             </>
           )}
 
-          {/* Step 3: Membership */}
-          {step === 3 && (
+          {/* Step 2: Membership */}
+          {step === 2 && (
             <>
               <p style={{ fontSize: 14, color: '#4A5568', marginBottom: 20 }}>
                 ACCE (India) members receive a discounted registration fee.
@@ -392,8 +341,8 @@ export default function RegistrationPage() {
             </>
           )}
 
-          {/* Step 4: Payment */}
-          {step === 4 && (
+          {/* Step 3: Payment */}
+          {step === 3 && (
             <>
               <div style={styles.amountBox}>
                 <span style={{ fontSize: 14, color: '#5C7086' }}>Registration Fee</span>
@@ -427,8 +376,8 @@ export default function RegistrationPage() {
             </>
           )}
 
-          {/* Step 5: Terms */}
-          {step === 5 && (
+          {/* Step 4: Terms */}
+          {step === 4 && (
             <>
               <label className="reg-check" style={styles.checkCard}>
                 <input type="checkbox" checked={form.termsAccepted} onChange={(e) => set('termsAccepted', e.target.checked)} style={styles.checkbox} />

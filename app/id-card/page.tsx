@@ -138,9 +138,6 @@ function IdCardContent() {
 
             <div style={styles.details}>
               <DetailRow label="Reg. ID" value={record.regId} />
-              <DetailRow label="Qualification" value={record.qualification || '—'} />
-              <DetailRow label="College / Company" value={record.orgName || '—'} />
-              <DetailRow label="Course / Branch" value={record.courseBranch || '—'} />
               <DetailRow label="Email" value={record.email} />
               <DetailRow label="Phone" value={`+91 ${record.mobile}`} />
             </div>
@@ -150,20 +147,26 @@ function IdCardContent() {
               <span style={styles.perfHoleRight} />
             </div>
 
-            <div style={styles.qrSection}>
-              <div style={styles.qrBox}>
-                <QrCode text={record.regId} size={120} />
+            {record.paymentStatus === 'verified' ? (
+              <div style={styles.qrSection}>
+                <div style={styles.qrBox}>
+                  <QrCode text={record.regId} size={120} />
+                </div>
+                <span style={styles.qrLabel}>Scan to verify</span>
               </div>
-              <span style={styles.qrLabel}>Scan to verify</span>
-            </div>
-
-            {record.paymentStatus !== 'verified' && (
-              <div style={{ marginTop: 12, padding: '10px 16px', background: 'rgba(255,184,38,0.1)', borderRadius: 8, textAlign: 'center' }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Payment pending admin verification — download disabled
+            ) : (
+              <div style={{ padding: '20px 16px', textAlign: 'center' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#D45048', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  QR code available after payment verification
                 </span>
               </div>
             )}
+
+            <div style={{ marginTop: 14, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 10, color: '#8A8E96', fontFamily: 'var(--font-mono)' }}>
+              Powered by
+              <img src="/img/a+.png" alt="A+ Tech Services" style={{ height: 14, width: 'auto', verticalAlign: 'middle' }} />
+              A+ Tech Services
+            </div>
           </div>
 
           <div style={styles.idcardStatus}>Registered Participant</div>

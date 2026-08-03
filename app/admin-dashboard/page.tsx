@@ -177,8 +177,7 @@ export default function AdminDashboardPage() {
   const handleExportRegs = () => {
     if (!filteredRegs.length) { showToast('Nothing to export.', 'error'); return; }
     const columns = [
-      'regId', 'fullName', 'mobile', 'email', 'qualification', 'orgName',
-      'courseBranch', 'gradYear', 'city', 'state', 'country',
+      'regId', 'fullName', 'mobile', 'email', 'city', 'state', 'country',
       'isACCEMember', 'paymentAmount', 'paymentStatus', 'checkedIn', 'createdAt',
     ];
     downloadCSV('acce-registrations.csv', toCSV(filteredRegs as unknown as Record<string, unknown>[], columns));
@@ -211,7 +210,7 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const [editFields, setEditFields] = useState({ fullName: '', mobile: '', email: '', qualification: '', orgName: '' });
+  const [editFields, setEditFields] = useState({ fullName: '', mobile: '', email: '' });
 
   const openRegModal = (mode: RegModalMode, record: Registration) => {
     setRegModal({ mode, record });
@@ -220,8 +219,6 @@ export default function AdminDashboardPage() {
         fullName: record.fullName,
         mobile: record.mobile,
         email: record.email,
-        qualification: record.qualification || '',
-        orgName: record.orgName || '',
       });
     }
   };
@@ -237,8 +234,6 @@ export default function AdminDashboardPage() {
         fullName: editFields.fullName.trim(),
         mobile: editFields.mobile.trim(),
         email: editFields.email.trim(),
-        qualification: editFields.qualification.trim(),
-        orgName: editFields.orgName.trim(),
       });
       showToast(`${regModal.record.regId} updated.`, 'success');
       closeRegModal();
@@ -315,45 +310,38 @@ export default function AdminDashboardPage() {
 
   return (
     <>
-      <div style={styles.shell} className="admin-shell-grid">
-        {/* ── Sidebar ── */}
-        <aside style={styles.sidebar} className="admin-sidebar-wrap">
-          <div style={styles.sidebarBrand}>
-            <span style={styles.brandMark}>
-              <Image src="/img/logo.png" alt="ACCE" width={34} height={34} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            </span>
-            <span>ACCE (India)</span>
-          </div>
-          <ul style={styles.sidebarNav}>
-            {([
-              { id: 'registrations' as Tab, label: 'Registrations' },
-              { id: 'sponsorships' as Tab, label: 'Sponsorships' },
-              { id: 'checkin' as Tab, label: 'Check-In' },
-            ]).map((item) => (
-              <li key={item.id}>
-                <button
-                  onClick={() => setTab(item.id)}
-                  style={{
-                    ...styles.sidebarLink,
-                    background: tab === item.id ? 'var(--ink-soft)' : 'transparent',
-                    color: tab === item.id ? 'var(--paper)' : '#B8CCE4',
-                  }}
-                >
-                  <span style={{ fontSize: 8 }}>●</span> {item.label}
-                </button>
-              </li>
-            ))}
-            <li style={{ marginTop: 8 }}>
-              <Link href="/" style={{ ...styles.sidebarLink, color: '#B8CCE4' }}>
-                <span>←</span> View Site
-              </Link>
-            </li>
-          </ul>
-          <button onClick={handleLogout} style={styles.logoutBtn} className="logout-btn">Log Out</button>
-        </aside>
+      {/* ── Top Bar ── */}
+      <div style={styles.topBar} className="admin-topbar-wrap">
+        <div style={styles.topBarLeft}>
+          <span style={styles.brandMark}>
+            <Image src="/img/logo.png" alt="ACCE" width={34} height={34} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          </span>
+          <span style={styles.topBarBrand}>ACCE (India)</span>
+          <Link href="/" style={styles.viewSiteLink}>← View Site</Link>
+        </div>
+        <div style={styles.topBarNav} className="admin-topbar-nav">
+          {([
+            { id: 'registrations' as Tab, label: 'Registrations' },
+            { id: 'sponsorships' as Tab, label: 'Sponsorships' },
+            { id: 'checkin' as Tab, label: 'Check-In' },
+          ]).map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setTab(item.id)}
+              style={{
+                ...styles.topNavLink,
+                background: tab === item.id ? 'var(--ink)' : 'transparent',
+                color: tab === item.id ? 'var(--paper)' : '#B8CCE4',
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+        <button onClick={handleLogout} style={styles.logoutBtn} className="logout-btn">Log Out</button>
+      </div>
 
-        {/* ── Main ── */}
-        <main style={styles.main} className="admin-main-wrap">
+      <div style={styles.main} className="admin-main-wrap">
           <div style={styles.topbar} className="admin-topbar-wrap">
             <h1 style={{ margin: 0, fontSize: 26, fontFamily: 'var(--font-display)' }}>Dashboard</h1>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#5A6270' }}>Signed in as admin</span>
@@ -408,7 +396,10 @@ export default function AdminDashboardPage() {
                   </select>
                   <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} style={styles.toolbarInput} />
                 </div>
-                <button className="btn btn-dark" onClick={handleExportRegs} style={{ minHeight: 40 }}>Export CSV</button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="btn btn-dark" onClick={handleExportRegs} style={{ minHeight: 40 }}>Export CSV</button>
+                  <button className="btn" onClick={handleLogout} style={{ minHeight: 40, background: 'transparent', color: 'var(--ink)', border: '1px solid var(--line)' }}>Log Out</button>
+                </div>
               </div>
 
               <div style={styles.tableWrap} className="admin-table-wrap">
@@ -455,8 +446,11 @@ export default function AdminDashboardPage() {
                         <td style={styles.td}>
                           <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
                             <button className="action-btn" onClick={() => openRegModal('view', r)}>View</button>
-                            {r.paymentStatus !== 'verified' && (
+                            {r.paymentStatus === 'pending' && (
                               <button className="action-btn" style={{ background: 'var(--gold)', color: '#0A2647', fontWeight: 600 }} onClick={() => handleVerifyPayment(r.regId)}>Verify Payment</button>
+                            )}
+                            {r.paymentStatus === 'rejected' && (
+                              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--brick)', fontWeight: 600, textTransform: 'uppercase', padding: '6px 8px', border: '1px solid var(--brick)', borderRadius: 4 }}>Rejected</span>
                             )}
                             <Link className="action-btn" href={`/id-card?regId=${r.regId}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>Screenshot ID Card</Link>
                           </div>
@@ -491,7 +485,10 @@ export default function AdminDashboardPage() {
                     style={styles.toolbarInput}
                   />
                 </div>
-                <button className="btn btn-dark" onClick={handleExportSpns} style={{ minHeight: 40 }}>Export CSV</button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="btn btn-dark" onClick={handleExportSpns} style={{ minHeight: 40 }}>Export CSV</button>
+                  <button className="btn" onClick={handleLogout} style={{ minHeight: 40, background: 'transparent', color: 'var(--ink)', border: '1px solid var(--line)' }}>Log Out</button>
+                </div>
               </div>
 
               <div style={styles.tableWrap} className="admin-table-wrap">
@@ -566,7 +563,6 @@ export default function AdminDashboardPage() {
               </div>
             </div>
           )}
-        </main>
       </div>
 
       {/* ── Registration View Modal ── */}
@@ -580,10 +576,6 @@ export default function AdminDashboardPage() {
             <ModalRow label="Check-In" value={regModal.record.checkedIn ? `Checked in${regModal.record.checkedInAt ? ' · ' + new Date(regModal.record.checkedInAt).toLocaleString() : ''}` : 'Not checked in'} />
             <ModalRow label="Mobile" value={regModal.record.mobile} />
             <ModalRow label="Email" value={regModal.record.email} />
-            <ModalRow label="Qualification" value={regModal.record.qualification || '—'} />
-            <ModalRow label="College / Company" value={regModal.record.orgName || '—'} />
-            <ModalRow label="Course / Branch" value={regModal.record.courseBranch || '—'} />
-            <ModalRow label="Designation" value={regModal.record.designation || '—'} />
             <ModalRow label="Location" value={`${regModal.record.city}, ${regModal.record.state}, ${regModal.record.country}`} />
             <ModalRow label="ACCE(I) Member" value={regModal.record.isACCEMember ? 'Yes' : 'No'} />
             <ModalRow label="Payment Amount" value={`₹${regModal.record.paymentAmount || 0}`} />
@@ -611,7 +603,11 @@ export default function AdminDashboardPage() {
                 </>
               )}
               {(regModal.record.paymentStatus || 'pending') === 'rejected' && (
-                <button className="btn btn-gold" onClick={() => handleVerifyPayment(regModal.record!.regId)}>Verify Payment</button>
+                <div style={{ padding: '12px 16px', background: 'rgba(214,75,75,0.1)', borderRadius: 8, textAlign: 'center', width: '100%' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--brick)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Payment Rejected — QR code hidden
+                  </span>
+                </div>
               )}
               {(regModal.record.paymentStatus || 'pending') === 'verified' && (
                 <button className="btn" style={{ background: '#9E9E9E', color: '#fff' }} onClick={() => handleRevokeVerification(regModal.record!.regId)}>Revoke Verification</button>
@@ -635,8 +631,6 @@ export default function AdminDashboardPage() {
             <div style={styles.field}><label style={styles.label}>Full Name</label><input type="text" value={editFields.fullName} onChange={(e) => setEditFields({ ...editFields, fullName: e.target.value })} style={styles.input} /></div>
             <div style={styles.field}><label style={styles.label}>Mobile</label><input type="text" value={editFields.mobile} maxLength={10} onChange={(e) => setEditFields({ ...editFields, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) })} style={styles.input} /></div>
             <div style={styles.field}><label style={styles.label}>Email</label><input type="email" value={editFields.email} onChange={(e) => setEditFields({ ...editFields, email: e.target.value })} style={styles.input} /></div>
-            <div style={styles.field}><label style={styles.label}>Qualification</label><input type="text" value={editFields.qualification} onChange={(e) => setEditFields({ ...editFields, qualification: e.target.value })} style={styles.input} /></div>
-            <div style={styles.field}><label style={styles.label}>College / Company</label><input type="text" value={editFields.orgName} onChange={(e) => setEditFields({ ...editFields, orgName: e.target.value })} style={styles.input} /></div>
             <div style={styles.modalActions} className="admin-modal-actions">
               <button className="btn btn-dark" onClick={closeRegModal}>Cancel</button>
               <button className="btn btn-gold" onClick={saveEdit}>Save Changes</button>
@@ -680,32 +674,52 @@ function ModalRow({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  shell: {
-    display: 'grid',
-    gridTemplateColumns: '240px 1fr',
-    minHeight: '100vh',
-    background: 'var(--paper)',
-    fontFamily: 'var(--font-body)',
-  },
-  sidebar: {
-    background: 'var(--ink)',
-    color: 'var(--paper)',
-    padding: '26px 20px',
-    position: 'sticky',
-    top: 0,
-    height: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  sidebarBrand: {
+  topBar: {
     display: 'flex',
     alignItems: 'center',
-    gap: 10,
+    justifyContent: 'space-between',
+    background: 'var(--ink)',
+    padding: '0 24px',
+    position: 'sticky',
+    top: 0,
+    zIndex: 100,
+    minHeight: 60,
+    gap: 16,
+    flexWrap: 'wrap',
+  },
+  topBarLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+  },
+  topBarBrand: {
     color: 'var(--paper)',
     fontFamily: 'var(--font-display)',
     fontWeight: 700,
     fontSize: 18,
-    marginBottom: 34,
+  },
+  viewSiteLink: {
+    color: '#B8CCE4',
+    fontFamily: 'var(--font-mono)',
+    fontSize: 11,
+    textDecoration: 'none',
+    marginLeft: 8,
+  },
+  topBarNav: {
+    display: 'flex',
+    gap: 4,
+  },
+  topNavLink: {
+    padding: '10px 18px',
+    borderRadius: 6,
+    fontFamily: 'var(--font-mono)',
+    fontSize: 12,
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+    border: 'none',
+    cursor: 'pointer',
+    minHeight: 40,
+    transition: 'background 0.2s, color 0.2s',
   },
   brandMark: {
     width: 34,
@@ -718,47 +732,24 @@ const styles: Record<string, React.CSSProperties> = {
     overflow: 'hidden',
     flexShrink: 0,
   },
-  sidebarNav: {
-    listStyle: 'none',
-    margin: 0,
-    padding: 0,
-    flex: 1,
-  },
-  sidebarLink: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    padding: '12px 14px',
-    borderRadius: 4,
-    fontFamily: 'var(--font-mono)',
-    fontSize: 12.5,
-    textTransform: 'uppercase',
-    letterSpacing: '0.04em',
-    marginBottom: 4,
-    border: 'none',
-    background: 'transparent',
-    cursor: 'pointer',
-    width: '100%',
-    textDecoration: 'none',
-    minHeight: 44,
-  },
   logoutBtn: {
-    marginTop: 'auto',
     background: 'transparent',
     border: '1px solid var(--line-dark)',
     color: 'var(--paper)',
-    padding: 12,
+    padding: '8px 16px',
     borderRadius: 4,
     fontFamily: 'var(--font-mono)',
-    fontSize: 12,
+    fontSize: 11,
     textTransform: 'uppercase',
-    minHeight: 44,
-    width: '100%',
+    minHeight: 38,
     cursor: 'pointer',
+    whiteSpace: 'nowrap',
   },
   main: {
-    padding: '34px 36px 60px',
-    overflow: 'auto',
+    padding: '30px 36px 60px',
+    minHeight: 'calc(100vh - 60px)',
+    background: 'var(--paper)',
+    fontFamily: 'var(--font-body)',
   },
   topbar: {
     display: 'flex',
