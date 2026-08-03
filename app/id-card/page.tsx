@@ -147,12 +147,20 @@ function IdCardContent() {
               <span style={styles.perfHoleRight} />
             </div>
 
-            <div style={styles.qrSection}>
-              <div style={styles.qrBox}>
-                <QrCode text={record.regId} size={120} />
+            {record.paymentStatus === 'verified' ? (
+              <div style={styles.qrSection}>
+                <div style={styles.qrBox}>
+                  <QrCode text={record.regId} size={120} />
+                </div>
+                <span style={styles.qrLabel}>Scan to verify</span>
               </div>
-              <span style={styles.qrLabel}>Scan to verify</span>
-            </div>
+            ) : (
+              <div style={{ padding: '20px 16px', textAlign: 'center' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#D45048', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  QR code available after payment verification
+                </span>
+              </div>
+            )}
 
             <div style={{ marginTop: 14, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 10, color: '#8A8E96', fontFamily: 'var(--font-mono)' }}>
               Powered by
