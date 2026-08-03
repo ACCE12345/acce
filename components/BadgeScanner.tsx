@@ -229,7 +229,7 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
             {scanStatus === 'success' && scanResult && (
               <div style={styles.scanOverlay}>
                 <div style={styles.scanSuccess}>
-                  <div style={{ fontSize: 32, marginBottom: 8, color: '#22c55e', fontWeight: 700 }}>&#10003;</div>
+                  <div style={{ fontSize: 32, marginBottom: 8, color: '#22c55e', fontWeight: 700 }}>PASS</div>
                   <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
                     Checked In: {scanResult}
                   </div>
@@ -246,7 +246,7 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
             {scanStatus === 'already-checked-in' && (
               <div style={{ ...styles.scanOverlay, background: 'rgba(180,40,40,0.85)' }}>
                 <div style={styles.scanSuccess}>
-                  <div style={{ fontSize: 32, marginBottom: 8, color: '#EF4444', fontWeight: 700 }}>&#10007;</div>
+                  <div style={{ fontSize: 32, marginBottom: 8, color: '#EF4444', fontWeight: 700 }}>DENIED</div>
                   <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', marginBottom: 4 }}>
                     ALREADY CHECKED IN
                   </div>

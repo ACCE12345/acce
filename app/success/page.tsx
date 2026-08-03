@@ -72,7 +72,7 @@ export default function SuccessPage() {
 
       <div style={styles.shell}>
         <div style={styles.card}>
-          <div style={styles.successIcon}>✓</div>
+          <div style={styles.successIcon}>DONE</div>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 26, color: 'var(--ink)', margin: '0 0 8px', textAlign: 'center' }}>
             Registration Successful
           </h2>

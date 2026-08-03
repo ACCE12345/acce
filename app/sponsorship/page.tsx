@@ -117,7 +117,7 @@ export default function SponsorshipPage() {
         <section style={styles.section}>
           <div style={{ maxWidth: 560, margin: '0 auto', padding: '0 20px' }}>
             <div style={styles.successCard}>
-              <div style={styles.successIcon}>✓</div>
+              <div style={styles.successIcon}>DONE</div>
               <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 26, color: 'var(--ink)', margin: '0 0 8px', textAlign: 'center' }}>
                 Sponsorship Application Received
               </h2>
@@ -207,7 +207,7 @@ export default function SponsorshipPage() {
                       {form.logoPreview ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                           <Image src={form.logoPreview} alt="Logo" width={60} height={60} style={{ width: 60, height: 60, objectFit: 'contain', borderRadius: 8 }} />
-                          <span style={{ color: 'var(--teal)', fontWeight: 600, fontSize: 14 }}>✓ Logo uploaded</span>
+                           <span style={{ color: 'var(--teal)', fontWeight: 600, fontSize: 14 }}>Logo uploaded</span>
                         </div>
                       ) : (
                         <div style={{ textAlign: 'center', color: '#7A869A' }}>

@@ -439,7 +439,7 @@ export default function AdminDashboardPage() {
                         <td style={styles.td}>{new Date(r.createdAt).toLocaleDateString()}</td>
                         <td style={styles.td}>
                           {r.checkedIn
-                            ? <span className="checkin-yes">✓ Yes</span>
+                            ? <span className="checkin-yes">YES</span>
                             : <span className="checkin-no">—</span>
                           }
                         </td>

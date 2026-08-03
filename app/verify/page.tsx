@@ -78,7 +78,7 @@ function VerifyContent() {
           {result === 'invalid' && (
             <div>
               <div style={styles.statusInvalid}>
-                <div style={{ fontSize: 44, marginBottom: 10 }}>✕</div>
+                <div style={{ fontSize: 44, marginBottom: 10 }}>FAIL</div>
                 <h2 style={{ color: '#fff', fontSize: 22, margin: 0 }}>Invalid Registration</h2>
               </div>
               <div style={styles.verifyBody}>
@@ -92,7 +92,7 @@ function VerifyContent() {
           {result === 'valid' && record && (
             <div>
               <div style={styles.statusValid}>
-                <div style={{ fontSize: 44, marginBottom: 10 }}>✓</div>
+                <div style={{ fontSize: 44, marginBottom: 10 }}>VALID</div>
                 <h2 style={{ color: '#fff', fontSize: 22, margin: 0 }}>Valid Registration</h2>
               </div>
               <div style={styles.verifyBody}>

@@ -86,7 +86,7 @@ export default function Home() {
                 transition: 'transform 0.15s ease',
               }}
             >
-              ✕
+              close
             </button>
             <Image
               src="/img/poste.jpeg"

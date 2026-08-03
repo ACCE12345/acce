@@ -244,7 +244,7 @@ export default function RegistrationPage() {
             {STEPS.map((s, i) => (
               <span key={s} style={{ ...styles.stepLabel, color: i <= step ? 'var(--gold)' : '#9AA5B4' }}>
                 <span style={{ ...styles.stepDot, background: i <= step ? 'var(--gold)' : '#D0D9E4', color: i < step ? '#fff' : i === step ? '#fff' : '#9AA5B4' }}>
-                  {i < step ? '✓' : i + 1}
+                   {i < step ? 'DONE' : i + 1}
                 </span>
                 <span style={{ display: 'none' }}>{s}</span>
               </span>
@@ -363,7 +363,7 @@ export default function RegistrationPage() {
                 <input ref={payRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" style={{ display: 'none' }} onChange={handlePayment} />
                 <div className="reg-upload" style={styles.uploadBox} onClick={() => payRef.current?.click()}>
                   {form.paymentScreenshotPreview ? (
-                    <div style={{ color: 'var(--teal)', fontWeight: 600, fontSize: 14 }}>✓ Screenshot uploaded</div>
+                     <div style={{ color: 'var(--teal)', fontWeight: 600, fontSize: 14 }}>Screenshot uploaded</div>
                   ) : (
                     <div style={{ textAlign: 'center', color: '#7A869A' }}>
                       <div style={{ fontSize: 28, marginBottom: 4 }}>+</div>
