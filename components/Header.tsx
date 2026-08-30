@@ -60,7 +60,7 @@ export default function Header() {
 
         <div className="nav-cta">
           <Link href="/registration" className="btn btn-red btn-ticket">
-            <span className="long">Register</span> Now
+            Register<span className="hide-mobile"> Now</span>
           </Link>
           <button
             className="nav-toggle"
