@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Fraunces, Public_Sans, IBM_Plex_Mono } from 'next/font/google';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ToastProvider } from '@/lib/toast';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -45,6 +46,7 @@ export default function RootLayout({
           {children}
           <Footer />
         </ToastProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
