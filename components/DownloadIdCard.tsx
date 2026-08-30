@@ -98,15 +98,15 @@ export default function DownloadIdCard({ variant = 'light' }: { variant?: 'light
       )}
 
       {/* ID Card preview + download */}
-        {record && record.paymentStatus !== 'verified' && (
+        {record && record.paymentStatus === 'rejected' && (
           <div style={{ marginTop: 24, padding: '16px 20px', background: 'rgba(255,184,38,0.1)', borderRadius: 10, textAlign: 'center' }}>
             <p style={{ color: 'var(--gold)', fontFamily: 'var(--font-mono)', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
-              ID card available after payment verification
+              ID card not available — payment rejected
             </p>
           </div>
         )}
 
-        {record && record.paymentStatus === 'verified' && (
+        {record && record.paymentStatus !== 'rejected' && (
           <div style={{ marginTop: 24 }}>
             <div ref={cardRef} style={{
               width: 380, maxWidth: '100%', background: '#fff', borderRadius: 16,

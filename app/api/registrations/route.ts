@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     if (!fullName || fullName.length > 100) return NextResponse.json({ error: 'Invalid full name' }, { status: 400 });
     if (!/^[6-9]\d{9}$/.test(mobile)) return NextResponse.json({ error: 'Invalid mobile number' }, { status: 400 });
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ error: 'Invalid email' }, { status: 400 });
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return NextResponse.json({ error: 'Invalid email' }, { status: 400 });
 
     const supabase = getSupabaseServer();
 
