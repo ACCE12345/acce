@@ -123,9 +123,8 @@ export async function findRegistration(regId: string): Promise<Registration | nu
 
 export async function findRegistrationByMobile(mobile: string): Promise<Registration | null> {
   try {
-    const data = await apiFetch<{ registrations: Record<string, unknown>[] }>(`/api/registrations?search=${mobile}`);
-    const regs = data.registrations.map(regApiToUI);
-    return regs.find((r) => r.mobile === mobile) || null;
+    const data = await apiFetch<Record<string, unknown>>(`/api/registrations/lookup?mobile=${mobile}`);
+    return regApiToUI(data);
   } catch {
     return null;
   }

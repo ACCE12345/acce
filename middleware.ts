@@ -36,11 +36,13 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Protect admin API routes (except public POST)
+  // Protect admin API routes (except public POST and public lookup)
   if (pathname.startsWith('/api/registrations') || pathname.startsWith('/api/sponsorships')) {
     const method = request.method;
     if (pathname === '/api/registrations' && method === 'POST') {
       // Public — registration form
+    } else if (pathname === '/api/registrations/lookup' && method === 'GET') {
+      // Public — download ID card by mobile
     } else if (pathname === '/api/sponsorships' && method === 'POST') {
       // Public — sponsorship form
     } else {
