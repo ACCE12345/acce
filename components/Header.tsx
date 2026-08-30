@@ -59,6 +59,9 @@ export default function Header() {
         </ul>
 
         <div className="nav-cta">
+          <Link href="/#download-id" className="btn btn-outline download-id-btn">
+            Download ID
+          </Link>
           <Link href="/registration" className="btn btn-red btn-ticket">
             Register<span className="hide-mobile"> Now</span>
           </Link>
