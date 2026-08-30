@@ -188,7 +188,7 @@ p{margin:0 0 1em;color:#4A5568;}
   margin-top:auto;
 }
 .hero-poster{position:relative;z-index:3;}
-.hero-kicker{font-family:var(--font-display);color:#FFFFFF;letter-spacing:.06em;font-size:20px;font-weight:700;margin-bottom:18px;display:block;}
+.hero-kicker{font-family:var(--font-display);color:#FFFFFF;letter-spacing:.06em;font-size:20px;font-weight:700;display:inline-block;padding:10px 24px;background:rgba(10,38,71,0.6);border-radius:8px;border:1px solid rgba(255,255,255,0.15);}
 .hero h1{font-size:clamp(28px,4.5vw,52px);color:#E06050;text-shadow:0 2px 12px rgba(0,0,0,.4);line-height:1.1;}
 .hero-sub{font-size:16px;color:#E8EFF8;max-width:600px;margin:0 auto 34px;text-shadow:0 1px 6px rgba(0,0,0,.5);line-height:1.6;}
 .hero-meta{display:flex;justify-content:center;gap:28px;margin:0 0 40px;flex-wrap:wrap;}
