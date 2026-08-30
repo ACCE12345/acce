@@ -106,8 +106,8 @@ export default function Home() {
         <div className="hero-overlay" />
         <div className="container hero-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 48, flexWrap: 'wrap', textAlign: 'left', maxWidth: 1100 }}>
           <div style={{ flex: '1 1 480px', minWidth: 300 }}>
-            <span className="hero-kicker" style={{ color: '#FFFFFF', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, letterSpacing: '0.06em', textTransform: 'none', display: 'block', marginBottom: 18 }}>25–26 Sep 2026 · Warangal, Telangana, IN</span>
             <h1 style={{ textAlign: 'left', color: '#E06050', fontSize: 'clamp(28px, 4.5vw, 52px)', lineHeight: 1.1, textShadow: '0 2px 12px rgba(0,0,0,0.4)' }}>Association of Consulting Civil Engineers (India), Warangal Centre</h1>
+            <span className="hero-kicker" style={{ color: '#FFFFFF', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, letterSpacing: '0.06em', textTransform: 'none', display: 'block', margin: '18px 0' }}>25–26 Sep 2026 · Warangal, Telangana, IN</span>
             <p className="hero-sub" style={{ textAlign: 'left', margin: '0 0 34px' }}>
               ACCE(India) Build Expo-2026 brings together 10,000+ Consulting Engineers,
               Architects, Builders, Contractors, Decision-Makers, and Industry Leaders
