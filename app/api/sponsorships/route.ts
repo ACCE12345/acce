@@ -82,11 +82,15 @@ export async function GET(request: NextRequest) {
     const supabase = getSupabaseServer();
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || '';
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '100', 10), 500);
+    const offset = (page - 1) * limit;
 
     let query = supabase
       .from('sponsorships')
       .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (search) {
       query = query.or(`company_name.ilike.%${search}%,sponsor_id.ilike.%${search}%,contact_person.ilike.%${search}%`);
@@ -95,7 +99,12 @@ export async function GET(request: NextRequest) {
     const { data, error, count } = await query;
     if (error) throw error;
 
-    return NextResponse.json({ sponsorships: data, total: count });
+    return NextResponse.json({ sponsorships: data, total: count }, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'private, no-cache, no-store, must-revalidate',
+      },
+    });
   } catch (err) {
     console.error('List sponsorships error:', err);
     return NextResponse.json({ error: 'Failed' }, { status: 500 });

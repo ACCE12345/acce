@@ -80,7 +80,12 @@ export async function GET(request: NextRequest) {
     const { data, error, count } = await query;
     if (error) throw error;
 
-    return NextResponse.json({ registrations: data, total: count });
+    return NextResponse.json({ registrations: data, total: count }, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'private, no-cache, no-store, must-revalidate',
+      },
+    });
   } catch (err) {
     console.error('List registrations error:', err);
     return NextResponse.json({ error: 'Failed to fetch registrations' }, { status: 500 });

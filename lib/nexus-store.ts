@@ -93,7 +93,7 @@ export async function getRegistrations(params?: { search?: string; date?: string
   const sp = new URLSearchParams();
   if (params?.search) sp.set('search', params.search);
   if (params?.date) sp.set('date', params.date);
-  sp.set('limit', '2000');
+  sp.set('limit', '500');
   const data = await apiFetch<{ registrations: Record<string, unknown>[] }>(`/api/registrations?${sp}`);
   return data.registrations.map(regApiToUI);
 }
@@ -150,6 +150,7 @@ export async function checkIn(regId: string): Promise<void> {
 export async function getSponsorships(params?: { search?: string }): Promise<Sponsorship[]> {
   const sp = new URLSearchParams();
   if (params?.search) sp.set('search', params.search);
+  sp.set('limit', '200');
   const data = await apiFetch<{ sponsorships: Record<string, unknown>[] }>(`/api/sponsorships?${sp}`);
   return data.sponsorships.map(spnApiToUI);
 }

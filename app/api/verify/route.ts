@@ -22,7 +22,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ valid: false }, { status: 404 });
     }
 
-    return NextResponse.json({ valid: true, registration: data });
+    return NextResponse.json({ valid: true, registration: data }, {
+      status: 200,
+      headers: { 'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=30' },
+    });
   } catch (err) {
     console.error('Verify error:', err);
     return NextResponse.json({ error: 'Verification failed' }, { status: 500 });
