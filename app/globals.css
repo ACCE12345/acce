@@ -504,3 +504,11 @@ p{margin:0 0 1em;color:#4A5568;}
   .admin-stats-row{grid-template-columns:repeat(3,1fr) !important;}
   .admin-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 }
+
+/* =========================================================
+   ID Card responsive
+   ========================================================= */
+@media (max-width:420px){
+  .idcard-actions{flex-direction:column !important;}
+  .idcard-actions button,.idcard-actions a{width:100% !important;justify-content:center !important;}
+}

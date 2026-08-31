@@ -98,15 +98,7 @@ export default function DownloadIdCard({ variant = 'light' }: { variant?: 'light
       )}
 
       {/* ID Card preview + download */}
-        {record && record.paymentStatus === 'rejected' && (
-          <div style={{ marginTop: 24, padding: '16px 20px', background: 'rgba(255,184,38,0.1)', borderRadius: 10, textAlign: 'center' }}>
-            <p style={{ color: 'var(--gold)', fontFamily: 'var(--font-mono)', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
-              ID card not available — payment rejected
-            </p>
-          </div>
-        )}
-
-        {record && record.paymentStatus !== 'rejected' && (
+        {record && (
           <div style={{ marginTop: 24 }}>
             <div ref={cardRef} style={{
               width: 380, maxWidth: '100%', background: '#fff', borderRadius: 16,
@@ -115,36 +107,42 @@ export default function DownloadIdCard({ variant = 'light' }: { variant?: 'light
               {/* Card header */}
               <div style={{
                 background: 'linear-gradient(135deg, #0A2647, #1D4E86)', color: '#fff',
-                padding: '22px 26px 40px', textAlign: 'center', position: 'relative',
+                padding: '16px 26px 20px', textAlign: 'center',
               }}>
-                <div style={{
-                  width: 34, height: 34, borderRadius: '50%', border: '1.5px solid #4484D1',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  overflow: 'hidden', background: '#0A2647', marginBottom: 10,
-                }}>
-                  <Image src="/img/logo.png" alt="ACCE" width={34} height={34} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, marginBottom: 8 }}>
+                  <Image src="/img/1.jpeg" alt="Partner" width={50} height={30} style={{ height: 30, width: 'auto', objectFit: 'contain' }} />
+                  <Image src="/img/2.jpeg" alt="Partner" width={50} height={30} style={{ height: 30, width: 'auto', objectFit: 'contain' }} />
                 </div>
                 <h3 style={{ color: '#fff', fontSize: 15, letterSpacing: '0.06em', textTransform: 'uppercase' as const, fontFamily: 'var(--font-mono)', margin: 0 }}>
-                  ACCE · Build Expo
+                  ACCE · Build Expo 2026
                 </h3>
-                <div style={{
-                  width: 100, height: 100, borderRadius: '50%', border: '4px solid #fff',
-                  background: '#eee', position: 'absolute', left: '50%', bottom: -50,
-                  transform: 'translateX(-50%)', overflow: 'hidden', boxShadow: '0 6px 18px rgba(0,0,0,.25)',
-                }}>
-                  {record.photo && <img src={record.photo} alt={record.fullName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
-                </div>
               </div>
 
               {/* Card body */}
-              <div style={{ padding: '64px 28px 10px', textAlign: 'center' }}>
+              <div style={{ padding: '12px 28px 10px', textAlign: 'center' }}>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: 23, marginBottom: 4, fontWeight: 700 }}>{record.fullName}</div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: '#2E63A8', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>
                   {record.isACCEMember ? 'ACCE Member — Delegate' : 'Delegate'}
                 </div>
+
+                {/* Avatar */}
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '14px 0' }}>
+                  <div style={{
+                    width: 80, height: 80, borderRadius: '50%', border: '3px solid #fff',
+                    background: 'linear-gradient(135deg, #0A2647, #1D4E86)',
+                    overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,.25)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {record.photo
+                      ? <img src={record.photo} alt={record.fullName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : <span style={{ fontSize: 36, fontWeight: 700, color: '#fff' }}>{record.fullName.charAt(0)}</span>
+                    }
+                  </div>
+                </div>
                 <div style={{ textAlign: 'left', marginTop: 22, borderTop: '1px dashed rgba(10,38,71,0.12)', paddingTop: 18 }}>
                   {[
                     ['Reg. ID', record.regId],
+                    ['Category', record.category || 'Delegate'],
                     ['Email', record.email],
                     ['Phone', `+91 ${record.mobile}`],
                   ].map(([label, value]) => (
@@ -168,15 +166,24 @@ export default function DownloadIdCard({ variant = 'light' }: { variant?: 'light
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A8E96' }}>Scan to verify</span>
                 </div>
               </div>
-              <div style={{
-                background: 'linear-gradient(135deg, #2E63A8, #4484D1)', color: '#fff', textAlign: 'center',
-                padding: 10, fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' as const,
-              }}>
-                Registered Participant
+
+              {/* Card footer */}
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontSize: 10, color: '#8A8E96', fontFamily: 'var(--font-mono)', padding: '10px 0 6px' }}>
+                  Powered by
+                  <img src="/img/a+.png" alt="A+ Tech Services" style={{ height: 14, width: 'auto', verticalAlign: 'middle', marginLeft: 4 }} />
+                  A+ Tech Services
+                </div>
+                <div style={{
+                  background: 'linear-gradient(135deg, #2E63A8, #4484D1)', color: '#fff', textAlign: 'center',
+                  padding: 10, fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+                }}>
+                  Registered Participant
+                </div>
               </div>
             </div>
 
-            {/* Action buttons - only show after payment verified */}
+            {/* Action buttons */}
             <div style={{ display: 'flex', gap: 12, marginTop: 20, justifyContent: 'center', flexWrap: 'wrap' }}>
               <button
                 className="btn btn-gold"
@@ -192,11 +199,6 @@ export default function DownloadIdCard({ variant = 'light' }: { variant?: 'light
               >
                 View Full Card
               </Link>
-            </div>
-            <div style={{ marginTop: 24, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 12, color: '#8A8E96' }}>
-              Powered by
-              <img src="/img/a+.png" alt="A+ Tech Services" style={{ height: 18, width: 'auto', verticalAlign: 'middle' }} />
-              A+ Tech Services
             </div>
           </div>
         )}

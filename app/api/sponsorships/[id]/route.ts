@@ -25,7 +25,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const supabase = getSupabaseServer();
 
     const updates: Record<string, unknown> = {};
-    if (body.paymentStatus !== undefined) updates.payment_status = body.paymentStatus;
 
     const { error } = await supabase
       .from('sponsorships')

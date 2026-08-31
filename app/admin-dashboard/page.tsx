@@ -13,9 +13,6 @@ import {
   deleteRegistration,
   deleteSponsorship,
   checkIn,
-  verifyPayment,
-  rejectPayment,
-  revokePayment,
   toCSV,
   downloadCSV,
   type Registration,
@@ -34,7 +31,6 @@ export default function AdminDashboardPage() {
 
   const [regs, setRegs] = useState<Registration[]>([]);
   const [regSearch, setRegSearch] = useState('');
-  const [filterPayment, setFilterPayment] = useState('');
   const [filterDate, setFilterDate] = useState('');
   const [regModal, setRegModal] = useState<{ mode: RegModalMode; record: Registration | null }>({ mode: null, record: null });
 
@@ -48,12 +44,12 @@ export default function AdminDashboardPage() {
 
   const refreshRegs = useCallback(async () => {
     try {
-      const data = await getRegistrations({ search: regSearch, paymentStatus: filterPayment, date: filterDate });
+      const data = await getRegistrations({ search: regSearch, date: filterDate });
       setRegs(data);
     } catch {
       showToast('Failed to load registrations', 'error');
     }
-  }, [regSearch, filterPayment, filterDate, showToast]);
+  }, [regSearch, filterDate, showToast]);
 
   const refreshSpns = useCallback(async () => {
     try {
@@ -129,8 +125,6 @@ export default function AdminDashboardPage() {
   const regStats = useMemo(() => [
     { label: 'Total Registrations', value: regs.length, cls: '' },
     { label: "Today's", value: regs.filter((r) => isToday(r.createdAt)).length, cls: 'accent' },
-    { label: 'Payments Verified', value: regs.filter((r) => r.paymentStatus === 'verified').length, cls: 'teal' },
-    { label: 'Payments Pending', value: regs.filter((r) => r.paymentStatus === 'pending').length, cls: 'accent' },
     { label: 'Total Sponsors', value: sponsors.length, cls: 'accent' },
   ], [regs, sponsors]);
 
@@ -178,7 +172,7 @@ export default function AdminDashboardPage() {
     if (!filteredRegs.length) { showToast('Nothing to export.', 'error'); return; }
     const columns = [
       'regId', 'fullName', 'mobile', 'email', 'city', 'state', 'country',
-      'isACCEMember', 'paymentAmount', 'paymentStatus', 'checkedIn', 'createdAt',
+      'isACCEMember', 'checkedIn', 'createdAt',
     ];
     downloadCSV('acce-registrations.csv', toCSV(filteredRegs as unknown as Record<string, unknown>[], columns));
     showToast('CSV exported.', 'success');
@@ -188,7 +182,7 @@ export default function AdminDashboardPage() {
     if (!filteredSpns.length) { showToast('Nothing to export.', 'error'); return; }
     const columns = [
       'sponsorId', 'companyName', 'contactPerson', 'phone', 'email',
-      'website', 'gst', 'paymentStatus', 'createdAt',
+      'website', 'gst', 'createdAt',
     ];
     downloadCSV('acce-sponsorships.csv', toCSV(filteredSpns as unknown as Record<string, unknown>[], columns));
     showToast('CSV exported.', 'success');
@@ -240,39 +234,6 @@ export default function AdminDashboardPage() {
       await refreshRegs();
     } catch {
       showToast('Update failed.', 'error');
-    }
-  };
-
-  const handleVerifyPayment = async (regId: string) => {
-    try {
-      await verifyPayment(regId);
-      showToast(`${regId} payment verified.`, 'success');
-      closeRegModal();
-      await refreshRegs();
-    } catch {
-      showToast('Verification failed.', 'error');
-    }
-  };
-
-  const handleRejectPayment = async (regId: string) => {
-    try {
-      await rejectPayment(regId);
-      showToast(`${regId} payment rejected.`, 'error');
-      closeRegModal();
-      await refreshRegs();
-    } catch {
-      showToast('Rejection failed.', 'error');
-    }
-  };
-
-  const handleRevokeVerification = async (regId: string) => {
-    try {
-      await revokePayment(regId);
-      showToast(`${regId} payment verification revoked.`, 'default');
-      closeRegModal();
-      await refreshRegs();
-    } catch {
-      showToast('Revoke failed.', 'error');
     }
   };
 
@@ -388,12 +349,6 @@ export default function AdminDashboardPage() {
                     onChange={(e) => setRegSearch(e.target.value)}
                     style={styles.toolbarInput}
                   />
-                  <select value={filterPayment} onChange={(e) => setFilterPayment(e.target.value)} style={styles.toolbarSelect}>
-                    <option value="">All Payments</option>
-                    <option value="pending">Pending</option>
-                    <option value="verified">Verified</option>
-                    <option value="rejected">Rejected</option>
-                  </select>
                   <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} style={styles.toolbarInput} />
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -406,36 +361,22 @@ export default function AdminDashboardPage() {
                 <table style={styles.table}>
                   <thead>
                     <tr>
-                      {['Photo', 'Reg. ID', 'Name', 'Phone', 'Email', 'ACCE(I)', 'Amount', 'Payment', 'Screenshot', 'Date', 'Check-in', 'Actions'].map((h) => (
+                      {['Reg. ID', 'Name', 'Phone', 'Email', 'Category', 'ACCE(I)', 'Date', 'Check-in', 'Actions'].map((h) => (
                         <th key={h} style={styles.th}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {filteredRegs.length === 0 ? (
-                      <tr><td colSpan={12} style={{ textAlign: 'center', color: '#8A8E96', padding: 40 }}>No registrations match your search.</td></tr>
+                      <tr><td colSpan={9} style={{ textAlign: 'center', color: '#8A8E96', padding: 40 }}>No registrations match your search.</td></tr>
                     ) : filteredRegs.map((r) => (
                       <tr key={r.regId} style={styles.tr}>
-                        <td style={styles.td}>
-                          {r.photo ? <img src={r.photo} alt="" style={styles.tablePhoto} /> : <div style={{ ...styles.tablePhoto, background: '#eee' }} />}
-                        </td>
                         <td style={styles.td}>{r.regId}</td>
                         <td style={styles.td}>{r.fullName}</td>
                         <td style={styles.td}>{r.mobile}</td>
                         <td style={styles.td}>{r.email}</td>
+                        <td style={styles.td}>{r.category || '—'}</td>
                         <td style={styles.td}>{r.isACCEMember ? <span style={{ color: 'var(--teal)', fontWeight: 600 }}>Yes</span> : 'No'}</td>
-                        <td style={styles.td}>₹{r.paymentAmount || 0}</td>
-                        <td style={styles.td}>
-                          <span className={`payment-badge ${r.paymentStatus || 'pending'}`}>
-                            {(r.paymentStatus || 'pending').charAt(0).toUpperCase() + (r.paymentStatus || 'pending').slice(1)}
-                          </span>
-                        </td>
-                        <td style={styles.td}>
-                          {r.paymentScreenshot
-                            ? <img src={r.paymentScreenshot} alt="Screenshot" style={styles.screenshotThumb} onClick={() => openRegModal('view', r)} />
-                            : <span style={{ color: '#8A8E96' }}>—</span>
-                          }
-                        </td>
                         <td style={styles.td}>{new Date(r.createdAt).toLocaleDateString()}</td>
                         <td style={styles.td}>
                           {r.checkedIn
@@ -446,12 +387,6 @@ export default function AdminDashboardPage() {
                         <td style={styles.td}>
                           <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
                             <button className="action-btn" onClick={() => openRegModal('view', r)}>View</button>
-                            {r.paymentStatus === 'pending' && (
-                              <button className="action-btn" style={{ background: 'var(--gold)', color: '#0A2647', fontWeight: 600 }} onClick={() => handleVerifyPayment(r.regId)}>Verify Payment</button>
-                            )}
-                            {r.paymentStatus === 'rejected' && (
-                              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--brick)', fontWeight: 600, textTransform: 'uppercase', padding: '6px 8px', border: '1px solid var(--brick)', borderRadius: 4 }}>Rejected</span>
-                            )}
                             <Link className="action-btn" href={`/id-card?regId=${r.regId}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>Screenshot ID Card</Link>
                           </div>
                         </td>
@@ -495,14 +430,14 @@ export default function AdminDashboardPage() {
                 <table style={styles.table}>
                   <thead>
                     <tr>
-                      {['Sponsor ID', 'Company', 'Contact', 'Phone', 'Email', 'Payment', 'Actions'].map((h) => (
+                      {['Sponsor ID', 'Company', 'Contact', 'Phone', 'Email', 'Actions'].map((h) => (
                         <th key={h} style={styles.th}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {filteredSpns.length === 0 ? (
-                      <tr><td colSpan={7} style={{ textAlign: 'center', color: '#8A8E96', padding: 40 }}>No sponsorship applications match your search.</td></tr>
+                      <tr><td colSpan={6} style={{ textAlign: 'center', color: '#8A8E96', padding: 40 }}>No sponsorship applications match your search.</td></tr>
                     ) : filteredSpns.map((s) => (
                       <tr key={s.sponsorId} style={styles.tr}>
                         <td style={styles.td}>{s.sponsorId}</td>
@@ -510,7 +445,6 @@ export default function AdminDashboardPage() {
                         <td style={styles.td}>{s.contactPerson}</td>
                         <td style={styles.td}>{s.phone}</td>
                         <td style={styles.td}>{s.email}</td>
-                        <td style={styles.td}>{s.paymentStatus}</td>
                         <td style={styles.td}>
                           <button className="action-btn" onClick={() => setSpnModal(s)}>View</button>
                           <button className="action-btn danger" onClick={() => handleDeleteSpnFromModal(s.sponsorId)}>Delete</button>
@@ -573,45 +507,13 @@ export default function AdminDashboardPage() {
             {regModal.record.photo && <img src={regModal.record.photo} alt="" style={styles.modalPhoto} />}
             <h3 style={{ fontSize: 20, marginBottom: 14 }}>{regModal.record.fullName}</h3>
             <ModalRow label="Reg. ID" value={regModal.record.regId} />
+            <ModalRow label="Category" value={regModal.record.category || '—'} />
             <ModalRow label="Check-In" value={regModal.record.checkedIn ? `Checked in${regModal.record.checkedInAt ? ' · ' + new Date(regModal.record.checkedInAt).toLocaleString() : ''}` : 'Not checked in'} />
             <ModalRow label="Mobile" value={regModal.record.mobile} />
             <ModalRow label="Email" value={regModal.record.email} />
             <ModalRow label="Location" value={`${regModal.record.city}, ${regModal.record.state}, ${regModal.record.country}`} />
             <ModalRow label="ACCE(I) Member" value={regModal.record.isACCEMember ? 'Yes' : 'No'} />
-            <ModalRow label="Payment Amount" value={`₹${regModal.record.paymentAmount || 0}`} />
-            <ModalRow label="Payment Status" value={
-              <span className={`payment-badge ${regModal.record.paymentStatus || 'pending'}`}>
-                {(regModal.record.paymentStatus || 'pending').charAt(0).toUpperCase() + (regModal.record.paymentStatus || 'pending').slice(1)}
-              </span>
-            } />
-            {regModal.record.paymentScreenshot && (
-              <div style={{ marginTop: 16 }}>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#8A8E96', marginBottom: 8 }}>Payment Screenshot</div>
-                <img
-                  src={regModal.record.paymentScreenshot}
-                  alt="Payment"
-                  style={{ width: '100%', maxWidth: 300, borderRadius: 8, border: '1px solid var(--line)', cursor: 'pointer' }}
-                  onClick={() => window.open(regModal.record!.paymentScreenshot, '_blank')}
-                />
-              </div>
-            )}
             <div style={styles.modalActions} className="admin-modal-actions">
-              {(regModal.record.paymentStatus || 'pending') === 'pending' && (
-                <>
-                  <button className="btn btn-gold" onClick={() => handleVerifyPayment(regModal.record!.regId)}>Verify Payment</button>
-                  <button className="btn" style={{ background: 'var(--brick)', color: '#fff' }} onClick={() => handleRejectPayment(regModal.record!.regId)}>Reject Payment</button>
-                </>
-              )}
-              {(regModal.record.paymentStatus || 'pending') === 'rejected' && (
-                <div style={{ padding: '12px 16px', background: 'rgba(214,75,75,0.1)', borderRadius: 8, textAlign: 'center', width: '100%' }}>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--brick)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Payment Rejected — QR code hidden
-                  </span>
-                </div>
-              )}
-              {(regModal.record.paymentStatus || 'pending') === 'verified' && (
-                <button className="btn" style={{ background: '#9E9E9E', color: '#fff' }} onClick={() => handleRevokeVerification(regModal.record!.regId)}>Revoke Verification</button>
-              )}
               <button className="btn" style={{ background: 'var(--brick)', color: '#fff' }} onClick={() => handleDeleteFromModal(regModal.record!.regId)}>Delete Member</button>
             </div>
             <div style={styles.modalActions} className="admin-modal-actions">
@@ -782,7 +684,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   statsRow: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(5, 1fr)',
+    gridTemplateColumns: 'repeat(3, 1fr)',
     gap: 16,
     marginBottom: 32,
   },

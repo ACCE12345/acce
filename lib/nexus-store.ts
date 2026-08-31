@@ -6,14 +6,12 @@ export interface Registration {
   photo: string;
   mobile: string;
   email: string;
+  category: string;
   city: string;
   state: string;
   country: string;
   pin: string;
   isACCEMember: boolean;
-  paymentAmount: number;
-  paymentScreenshot: string;
-  paymentStatus: 'pending' | 'verified' | 'rejected';
   checkedIn: boolean;
   checkedInAt: string | null;
   createdAt: string;
@@ -30,7 +28,6 @@ export interface Sponsorship {
   logo: string;
   gst: string;
   requirements: string;
-  paymentStatus: 'pending' | 'verified' | 'rejected';
   createdAt: string;
 }
 
@@ -53,14 +50,12 @@ function regApiToUI(r: Record<string, unknown>): Registration {
     photo: (r.photo_url as string) || '',
     mobile: r.mobile as string,
     email: r.email as string,
+    category: (r.category as string) || '',
     city: (r.city as string) || '',
     state: (r.state as string) || '',
     country: (r.country as string) || 'India',
     pin: (r.pin as string) || '',
     isACCEMember: r.is_acce_member as boolean,
-    paymentAmount: r.payment_amount as number,
-    paymentScreenshot: (r.payment_screenshot_url as string) || '',
-    paymentStatus: (r.payment_status as Registration['paymentStatus']) || 'pending',
     checkedIn: r.checked_in as boolean,
     checkedInAt: (r.checked_in_at as string) || null,
     createdAt: r.created_at as string,
@@ -79,7 +74,6 @@ function spnApiToUI(s: Record<string, unknown>): Sponsorship {
     logo: (s.logo_url as string) || '',
     gst: (s.gst as string) || '',
     requirements: (s.requirements as string) || '',
-    paymentStatus: (s.payment_status as Sponsorship['paymentStatus']) || 'pending',
     createdAt: s.created_at as string,
   };
 }
@@ -95,10 +89,9 @@ async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
 
 // ── Registrations ────────────────────────────────────
 
-export async function getRegistrations(params?: { search?: string; paymentStatus?: string; date?: string }): Promise<Registration[]> {
+export async function getRegistrations(params?: { search?: string; date?: string }): Promise<Registration[]> {
   const sp = new URLSearchParams();
   if (params?.search) sp.set('search', params.search);
-  if (params?.paymentStatus) sp.set('paymentStatus', params.paymentStatus);
   if (params?.date) sp.set('date', params.date);
   sp.set('limit', '2000');
   const data = await apiFetch<{ registrations: Record<string, unknown>[] }>(`/api/registrations?${sp}`);
@@ -135,7 +128,6 @@ export async function updateRegistration(regId: string, updates: Partial<Registr
   if (updates.fullName !== undefined) body.fullName = updates.fullName;
   if (updates.mobile !== undefined) body.mobile = updates.mobile;
   if (updates.email !== undefined) body.email = updates.email;
-  if (updates.paymentStatus !== undefined) body.paymentStatus = updates.paymentStatus;
   if (updates.checkedIn !== undefined) body.checkedIn = updates.checkedIn;
 
   await apiFetch(`/api/registrations/${regId}`, {
@@ -151,18 +143,6 @@ export async function deleteRegistration(regId: string): Promise<void> {
 
 export async function checkIn(regId: string): Promise<void> {
   await apiFetch(`/api/registrations/${regId}/check-in`, { method: 'POST' });
-}
-
-export async function verifyPayment(regId: string): Promise<void> {
-  await apiFetch(`/api/registrations/${regId}/verify-payment`, { method: 'POST' });
-}
-
-export async function rejectPayment(regId: string): Promise<void> {
-  await apiFetch(`/api/registrations/${regId}/reject-payment`, { method: 'POST' });
-}
-
-export async function revokePayment(regId: string): Promise<void> {
-  await apiFetch(`/api/registrations/${regId}/revoke-payment`, { method: 'POST' });
 }
 
 // ── Sponsorships ─────────────────────────────────────

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
-import Image from 'next/image';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { addRegistration } from '@/lib/nexus-store';
 import { useToast } from '@/lib/toast';
 
@@ -18,22 +18,13 @@ const INDIAN_STATES = [
   'Lakshadweep', 'Andaman and Nicobar Islands',
 ];
 
-const TELANGANA_DISTRICTS = [
-  'Adilabad', 'Mancherial', 'Nizamabad', 'Jagtial', 'Peddapalli',
-  'Karimnagar', 'Warangal Urban', 'Warangal Rural', 'Hanamkonda',
-  'Jayashankar Bhupalpally', 'Mulugu', 'Bhadradri Kothagudem',
-  'Khammam', 'Nalgonda', 'Suryapet', 'Mahabubabad', 'Mahabubnagar',
-  'Nagarkurnool', 'Wanaparthy', 'Jogulamba Gadwal', 'Rangareddy',
-  'Medchal-Malkajgiri', 'Hyderabad', 'Vikarabad', 'Sangareddy',
-  'Medak', 'Kamareddy', 'Bhupalpally',
-];
+const CATEGORIES = ['Delegate', 'Builder/Contractor', 'Engineer', 'Architect'];
 
 interface FormData {
   fullName: string;
-  photo: File | null;
-  photoPreview: string;
   mobile: string;
   email: string;
+  category: string;
   address: string;
   district: string;
   state: string;
@@ -41,10 +32,9 @@ interface FormData {
 
 const INITIAL: FormData = {
   fullName: '',
-  photo: null,
-  photoPreview: '',
   mobile: '',
   email: '',
+  category: '',
   address: '',
   district: '',
   state: '',
@@ -57,37 +47,18 @@ export default function RegistrationPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [resultId, setResultId] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const photoRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    return () => {
-      if (form.photoPreview) URL.revokeObjectURL(form.photoPreview);
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const set = useCallback((key: keyof FormData, val: string | File | null) => {
+  const set = useCallback((key: keyof FormData, val: string) => {
     setForm((p) => ({ ...p, [key]: val }));
     setErrors((p) => { const n = { ...p }; delete n[key]; return n; });
   }, []);
 
-  const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) { showToast('Photo must be JPG/PNG/WEBP', 'error'); return; }
-    if (file.size > 2 * 1024 * 1024) { showToast('Photo must be under 2MB', 'error'); return; }
-    const url = URL.createObjectURL(file);
-    setForm((p) => ({ ...p, photo: file, photoPreview: url }));
-    setErrors((p) => { const n = { ...p }; delete n.photo; return n; });
-  };
-
   const validate = (): boolean => {
     const e: Record<string, string> = {};
     if (!form.fullName.trim()) e.fullName = 'Full Name is required';
-    if (!form.photo) e.photo = 'Profile Photo is required';
     if (!/^[6-9]\d{9}$/.test(form.mobile)) e.mobile = 'Valid 10-digit Indian mobile required';
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Valid email required';
-    if (!form.address.trim()) e.address = 'Address is required';
-    if (!form.district) e.district = 'District is required';
+    if (!form.category) e.category = 'Category is required';
     if (!form.state) e.state = 'State is required';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -99,9 +70,9 @@ export default function RegistrationPage() {
     try {
       const fd = new FormData();
       fd.append('fullName', form.fullName.trim());
-      if (form.photo) fd.append('photo', form.photo);
       fd.append('mobile', form.mobile.trim());
       fd.append('email', form.email.trim());
+      fd.append('category', form.category);
       fd.append('address', form.address.trim());
       fd.append('district', form.district);
       fd.append('state', form.state);
@@ -123,46 +94,64 @@ export default function RegistrationPage() {
     return (
       <div style={styles.overlay}>
         <div className="reg-popup" style={styles.popup}>
-          <div style={styles.checkCircle}>
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-              <circle cx="24" cy="24" r="24" fill="#16a34a" />
-              <path d="M14 25l7 7L34 17" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: 'var(--ink)', margin: '20px 0 8px', textAlign: 'center' }}>
-            Registration Successful!
-          </h2>
-          <div style={styles.idBadge}>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--teal)' }}>Registration ID</span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 700, color: 'var(--ink)', letterSpacing: '0.04em' }}>{resultId}</span>
-          </div>
-
-          <div style={{ padding: '12px 16px', background: 'rgba(212,80,72,0.08)', borderRadius: 8, textAlign: 'center', margin: '12px 0' }}>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#D45048', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              QR code will be available after payment verification
-            </span>
-          </div>
-
-          {form.photoPreview && (
-            <div style={{ margin: '16px auto', width: 90, height: 90, borderRadius: '50%', overflow: 'hidden', border: '3px solid var(--gold)' }}>
-              <Image src={form.photoPreview} alt="Profile" width={90} height={90} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div style={{ width: '100%', overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
+            <div style={{ display: 'flex', width: '100%' }}>
+              <Image src="/img/1.jpeg" alt="Partner" width={200} height={60} style={{ width: '50%', height: 60, objectFit: 'cover' }} />
+              <Image src="/img/2.jpeg" alt="Partner" width={200} height={60} style={{ width: '50%', height: 60, objectFit: 'cover' }} />
             </div>
-          )}
-          <div style={{ width: '100%', marginTop: 16 }}>
-            {[
-              ['Name', form.fullName],
-              ['Phone', form.mobile],
-              ['Email', form.email || '—'],
-              ['District', form.district],
-              ['State', form.state],
-            ].map(([label, value]) => (
-              <div key={label as string} style={styles.summaryRow}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#5C7086', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
-                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>{value as string}</span>
-              </div>
-            ))}
           </div>
-          <div className="reg-popup-btn" style={{ display: 'flex', gap: 12, marginTop: 24, width: '100%' }}>
+
+          <div style={{ background: 'linear-gradient(135deg, #0A2647, #1D4E86)', padding: '14px 20px', textAlign: 'center', width: '100%' }}>
+            <h3 style={{ color: '#fff', fontSize: 13, letterSpacing: '0.06em', textTransform: 'uppercase' as const, fontFamily: 'var(--font-mono)', margin: 0 }}>
+              ACCE · Build Expo 2026
+            </h3>
+          </div>
+
+          <div style={{ padding: '24px 24px 0', textAlign: 'center' }}>
+            <div style={styles.checkCircle}>
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <circle cx="24" cy="24" r="24" fill="#16a34a" />
+                <path d="M14 25l7 7L34 17" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 24, color: 'var(--ink)', margin: '16px 0 8px' }}>
+              Registration Successful!
+            </h2>
+            <div style={styles.idBadge}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--teal)' }}>Registration ID</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 16, fontWeight: 700, color: 'var(--ink)', letterSpacing: '0.04em' }}>{resultId}</span>
+            </div>
+
+            <div style={{ padding: '10px 14px', background: 'rgba(22,163,74,0.08)', borderRadius: 8, textAlign: 'center', margin: '12px 0' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#16a34a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Your digital ID card is ready
+              </span>
+            </div>
+
+            <div style={{ width: '100%', marginTop: 12 }}>
+              {[
+                ['Name', form.fullName],
+                ['Phone', form.mobile],
+                ['Email', form.email || '—'],
+                ['Category', form.category],
+                ['District', form.district || '—'],
+                ['State', form.state],
+              ].map(([label, value]) => (
+                <div key={label as string} style={styles.summaryRow}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#5C7086', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>{value as string}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontSize: 9, color: '#8A8E96', fontFamily: 'var(--font-mono)', padding: '12px 0 4px' }}>
+              Powered by
+              <img src="/img/a+.png" alt="A+ Tech Services" style={{ height: 12, width: 'auto', verticalAlign: 'middle', marginLeft: 4 }} />
+              A+ Tech Services
+            </div>
+          </div>
+
+          <div className="reg-popup-btn" style={{ display: 'flex', gap: 12, marginTop: 16, width: '100%', padding: '0 24px 24px' }}>
             <Link href={`/id-card?regId=${resultId}`} style={{ ...styles.popupBtn, ...styles.popupBtnPrimary }}>
               View Digital ID Card
             </Link>
@@ -208,34 +197,23 @@ export default function RegistrationPage() {
           </div>
 
           <div style={{ marginBottom: 18 }}>
-            <label style={styles.label}>Profile Photo <span style={{ color: 'var(--brick)', marginLeft: 2 }}>*</span></label>
-            <input ref={photoRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handlePhoto} />
-            <div className="reg-upload" role="button" tabIndex={0} style={styles.uploadBox} onClick={() => photoRef.current?.click()} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') photoRef.current?.click(); }}>
-              {form.photoPreview ? (
-                <Image src={form.photoPreview} alt="Preview" width={80} height={80} style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--gold)' }} />
-              ) : (
-                <div style={{ textAlign: 'center', color: '#7A869A' }}>
-                  <div style={{ fontSize: 28, marginBottom: 4 }}>+</div>
-                  <div style={{ fontSize: 12 }}>JPG/PNG/WEBP, max 2MB</div>
-                </div>
-              )}
-            </div>
-            {errors.photo && <span style={{ color: 'var(--brick)', fontSize: 12, marginTop: 4, display: 'block' }}>{errors.photo}</span>}
+            <label style={styles.label}>Category <span style={{ color: 'var(--brick)', marginLeft: 2 }}>*</span></label>
+            <select className="reg-input" style={styles.input} value={form.category} onChange={(e) => set('category', e.target.value)}>
+              <option value="">Select category</option>
+              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+            {errors.category && <span style={{ color: 'var(--brick)', fontSize: 12, marginTop: 4, display: 'block' }}>{errors.category}</span>}
           </div>
 
           <div style={{ marginBottom: 18 }}>
-            <label style={styles.label}>Address <span style={{ color: 'var(--brick)', marginLeft: 2 }}>*</span></label>
+            <label style={styles.label}>Address</label>
             <input className="reg-input" style={styles.input} placeholder="Enter your full address" maxLength={200} value={form.address} onChange={(e) => set('address', e.target.value)} />
             {errors.address && <span style={{ color: 'var(--brick)', fontSize: 12, marginTop: 4, display: 'block' }}>{errors.address}</span>}
           </div>
 
           <div style={{ marginBottom: 18 }}>
-            <label style={styles.label}>District <span style={{ color: 'var(--brick)', marginLeft: 2 }}>*</span></label>
-            <select className="reg-input" style={styles.input} value={form.district} onChange={(e) => set('district', e.target.value)}>
-              <option value="">Select district</option>
-              {TELANGANA_DISTRICTS.map((d) => <option key={d} value={d}>{d}</option>)}
-            </select>
-            {errors.district && <span style={{ color: 'var(--brick)', fontSize: 12, marginTop: 4, display: 'block' }}>{errors.district}</span>}
+            <label style={styles.label}>District</label>
+            <input className="reg-input" style={styles.input} placeholder="Enter your district" maxLength={100} value={form.district} onChange={(e) => set('district', e.target.value)} />
           </div>
 
           <div style={{ marginBottom: 18 }}>
@@ -321,17 +299,6 @@ const styles: Record<string, React.CSSProperties> = {
     outline: 'none',
     transition: 'border-color 0.2s, box-shadow 0.2s',
     boxSizing: 'border-box' as const,
-  },
-  uploadBox: {
-    border: '2px dashed var(--line)',
-    borderRadius: 10,
-    padding: '20px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    transition: 'border-color 0.2s',
-    minHeight: 100,
   },
   btn: {
     padding: '14px 28px',

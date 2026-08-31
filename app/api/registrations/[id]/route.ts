@@ -31,7 +31,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (body.fullName !== undefined) updates.full_name = body.fullName;
     if (body.mobile !== undefined) updates.mobile = body.mobile;
     if (body.email !== undefined) updates.email = body.email;
-    if (body.paymentStatus !== undefined) updates.payment_status = body.paymentStatus;
     if (body.checkedIn !== undefined) {
       updates.checked_in = body.checkedIn;
       if (body.checkedIn) updates.checked_in_at = new Date().toISOString();

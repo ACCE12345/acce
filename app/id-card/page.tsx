@@ -40,10 +40,6 @@ function IdCardContent() {
 
   const handleDownloadCard = async () => {
     if (!cardRef.current || !record) return;
-    if (record.paymentStatus !== 'verified') {
-      showToast('ID card download requires payment verification by an admin.', 'error');
-      return;
-    }
     try {
       showToast('Preparing your ID card image…');
       await captureElementAsImage(cardRef.current, `${record?.regId || 'id'}-idcard.png`);
@@ -55,10 +51,6 @@ function IdCardContent() {
 
   const handleDownloadQR = useCallback(async () => {
     if (!record) return;
-    if (record.paymentStatus !== 'verified') {
-      showToast('QR code download requires payment verification by an admin.', 'error');
-      return;
-    }
     try {
       const dataUrl = await QRCodeLib.toDataURL(record.regId, {
         width: 300, margin: 2,
@@ -123,21 +115,29 @@ function IdCardContent() {
       <div style={styles.shell}>
         <div ref={cardRef} style={styles.idcard}>
           <div style={styles.idcardHead}>
-            <span style={styles.brandMark}>
-              <Image src="/img/logo.png" alt="ACCE" width={34} height={34} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            </span>
-            <h3 style={styles.headTitle}>ACCE · Build Expo</h3>
-            <div style={styles.photoCircle}>
-              {record.photo && <img src={record.photo} alt={record.fullName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+            <div style={styles.logoRow}>
+              <Image src="/img/1.jpeg" alt="Partner" width={50} height={30} style={{ height: 30, width: 'auto', objectFit: 'contain' }} />
+              <Image src="/img/2.jpeg" alt="Partner" width={50} height={30} style={{ height: 30, width: 'auto', objectFit: 'contain' }} />
             </div>
+            <h3 style={styles.headTitle}>ACCE · Build Expo 2026</h3>
           </div>
 
           <div style={styles.idcardBody}>
             <div style={styles.name}>{record.fullName}</div>
             <div style={styles.role}>{record.isACCEMember ? 'ACCE Member — Delegate' : 'Delegate'}</div>
 
+            <div style={styles.photoWrap}>
+              <div style={styles.photoCircle}>
+                {record.photo
+                  ? <img src={record.photo} alt={record.fullName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <span style={{ fontSize: 36, fontWeight: 700, color: '#fff' }}>{record.fullName.charAt(0)}</span>
+                }
+              </div>
+            </div>
+
             <div style={styles.details}>
               <DetailRow label="Reg. ID" value={record.regId} />
+              <DetailRow label="Category" value={record.category || 'Delegate'} />
               <DetailRow label="Email" value={record.email} />
               <DetailRow label="Phone" value={`+91 ${record.mobile}`} />
             </div>
@@ -147,37 +147,30 @@ function IdCardContent() {
               <span style={styles.perfHoleRight} />
             </div>
 
-            {record.paymentStatus === 'verified' ? (
-              <div style={styles.qrSection}>
-                <div style={styles.qrBox}>
-                  <QrCode text={record.regId} size={120} />
-                </div>
-                <span style={styles.qrLabel}>Scan to verify</span>
+            <div style={styles.qrSection}>
+              <div style={styles.qrBox}>
+                <QrCode text={record.regId} size={120} />
               </div>
-            ) : (
-              <div style={{ padding: '20px 16px', textAlign: 'center' }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: '#D45048', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  QR code available after payment verification
-                </span>
-              </div>
-            )}
-
-            <div style={{ marginTop: 14, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 10, color: '#8A8E96', fontFamily: 'var(--font-mono)' }}>
-              Powered by
-              <img src="/img/a+.png" alt="A+ Tech Services" style={{ height: 14, width: 'auto', verticalAlign: 'middle' }} />
-              A+ Tech Services
+              <span style={styles.qrLabel}>Scan to verify</span>
             </div>
           </div>
 
-          <div style={styles.idcardStatus}>Registered Participant</div>
+          <div style={styles.idcardFooter}>
+            <div style={styles.poweredBy}>
+              Powered by
+              <img src="/img/a+.png" alt="A+ Tech Services" style={{ height: 14, width: 'auto', verticalAlign: 'middle', marginLeft: 4 }} />
+              A+ Tech Services
+            </div>
+            <div style={styles.idcardStatus}>Registered Participant</div>
+          </div>
         </div>
 
-          <div style={styles.actions}>
-            <button className="btn btn-gold" onClick={handleDownloadCard} disabled={record.paymentStatus !== 'verified'}>Download ID Card</button>
-            <button className="btn" style={{ background: 'transparent', color: 'var(--ink)', border: '1px solid var(--line)' }} onClick={handleDownloadQR} disabled={record.paymentStatus !== 'verified'}>
-              Download QR Code
+        <div className="idcard-actions" style={styles.actions}>
+          <button className="btn btn-gold" onClick={handleDownloadCard}>Download ID Card</button>
+          <button className="btn" style={{ background: 'transparent', color: 'var(--ink)', border: '1px solid var(--line)' }} onClick={handleDownloadQR}>
+            Download QR Code
           </button>
-          <Link href="/verify" className="btn btn-dark" style={{ textDecoration: 'none' }}>Verify a Badge</Link>
+          <Link href="/" className="btn btn-dark" style={{ textDecoration: 'none' }}>Back to Home</Link>
         </div>
       </div>
     </>
@@ -243,47 +236,45 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: 'var(--glow)',
   },
   idcardHead: {
-    background: 'linear-gradient(135deg, var(--ink), var(--ink-softer))',
-    color: 'var(--paper)',
-    padding: '22px 26px 40px',
+    background: 'linear-gradient(135deg, #0A2647, #1D4E86)',
+    color: '#fff',
+    padding: '16px 26px 20px',
     textAlign: 'center',
-    position: 'relative',
   },
-  brandMark: {
-    display: 'inline-flex',
-    width: 34,
-    height: 34,
-    borderRadius: '50%',
-    border: '1.5px solid var(--gold)',
-    overflow: 'hidden',
+  logoRow: {
+    display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'var(--ink)',
-    marginBottom: 10,
+    gap: 20,
+    marginBottom: 8,
   },
   headTitle: {
-    color: 'var(--paper)',
+    color: '#fff',
     fontSize: 15,
     letterSpacing: '0.06em',
     textTransform: 'uppercase' as const,
     fontFamily: 'var(--font-mono)',
     margin: 0,
   },
+  photoWrap: {
+    display: 'flex',
+    justifyContent: 'center',
+    margin: '14px 0',
+  },
   photoCircle: {
-    width: 100,
-    height: 100,
+    width: 80,
+    height: 80,
     borderRadius: '50%',
-    border: '4px solid #fff',
-    background: '#eee',
-    position: 'absolute',
-    left: '50%',
-    bottom: -50,
-    transform: 'translateX(-50%)',
+    border: '3px solid #fff',
+    background: 'linear-gradient(135deg, #0A2647, #1D4E86)',
     overflow: 'hidden',
-    boxShadow: '0 6px 18px rgba(0,0,0,.25)',
+    boxShadow: '0 4px 12px rgba(0,0,0,.25)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   idcardBody: {
-    padding: '64px 28px 10px',
+    padding: '12px 28px 10px',
     textAlign: 'center',
   },
   name: {
@@ -352,6 +343,19 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
     color: '#8A8E96',
+  },
+  idcardFooter: {
+    textAlign: 'center',
+  },
+  poweredBy: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    fontSize: 10,
+    color: '#8A8E96',
+    fontFamily: 'var(--font-mono)',
+    padding: '10px 0 6px',
   },
   idcardStatus: {
     background: 'linear-gradient(135deg, var(--teal), var(--teal-bright))',

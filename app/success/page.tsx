@@ -103,8 +103,6 @@ export default function SuccessPage() {
             <SummaryRow label="Name" value={record.fullName} />
             <SummaryRow label="Email" value={record.email} />
             <SummaryRow label="Phone" value={`+91 ${record.mobile}`} />
-            <SummaryRow label="Amount" value={`₹${record.paymentAmount}`} />
-            <SummaryRow label="Payment" value="Pending Verification" />
           </div>
 
           <div style={styles.actions}>
