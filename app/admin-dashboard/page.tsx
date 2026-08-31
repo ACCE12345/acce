@@ -308,26 +308,6 @@ export default function AdminDashboardPage() {
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#5A6270' }}>Signed in as admin</span>
           </div>
 
-          <div style={styles.tabs} className="admin-tabs-wrap">
-            {([
-              { id: 'registrations' as Tab, label: 'Registrations' },
-              { id: 'sponsorships' as Tab, label: 'Sponsorship Management' },
-              { id: 'checkin' as Tab, label: 'Check-In Scanner' },
-            ]).map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setTab(item.id)}
-                style={{
-                  ...styles.tabBtn,
-                  color: tab === item.id ? 'var(--ink)' : '#8A8E96',
-                  borderBottomColor: tab === item.id ? 'var(--gold)' : 'transparent',
-                }}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-
           {/* ── REGISTRATIONS TAB ── */}
           {tab === 'registrations' && (
             <div>
@@ -459,41 +439,40 @@ export default function AdminDashboardPage() {
 
           {/* ── CHECK-IN TAB ── */}
           {tab === 'checkin' && (
-            <div style={styles.checkinGrid} className="admin-checkin-grid">
-              <div style={styles.scannerCard}>
+            <div>
+              <div style={{ marginBottom: 24 }}>
                 <BadgeScanner onCheckInSuccess={() => { refreshRegs(); refreshCheckins(); }} />
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                <div style={styles.manualCard}>
-                  <h4 style={{ margin: '0 0 12px', fontSize: 16 }}>Manual Check-In</h4>
-                  <div style={{ display: 'flex', gap: 10 }}>
-                    <input
-                      type="text"
-                      placeholder="REG-XXXXX"
-                      value={manualId}
-                      onChange={(e) => setManualId(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleManualCheckin()}
-                      style={styles.manualInput}
-                    />
-                    <button className="btn btn-dark" onClick={handleManualCheckin} style={{ whiteSpace: 'nowrap' }}>Check In</button>
-                  </div>
-                  <p style={{ color: '#8A8E96', fontSize: 12, margin: '10px 0 0' }}>No camera? Type or paste a Registration ID.</p>
+              <div style={styles.manualCard}>
+                <h4 style={{ margin: '0 0 12px', fontSize: 16 }}>Manual Check-In</h4>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <input
+                    type="text"
+                    placeholder="REG-XXXXX"
+                    value={manualId}
+                    onChange={(e) => setManualId(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleManualCheckin()}
+                    style={styles.manualInput}
+                  />
+                  <button className="btn btn-dark" onClick={handleManualCheckin} style={{ whiteSpace: 'nowrap' }}>Check In</button>
                 </div>
-                <div style={styles.recentCard}>
-                  <h4 style={{ margin: '0 0 12px', fontSize: 16 }}>Recent Check-Ins</h4>
-                  {recentCheckins.length === 0 ? (
-                    <p style={{ color: '#8A8E96', fontSize: 13 }}>No check-ins yet.</p>
-                  ) : recentCheckins.map((r) => (
-                    <div key={r.regId} className="recent-item">
-                      <div>
-                        <div className="name">{r.fullName}</div>
-                        <div className="meta">{r.regId}</div>
-                      </div>
-                      <div className="meta">{r.checkedInAt ? new Date(r.checkedInAt).toLocaleTimeString() : ''}</div>
+                <p style={{ color: '#8A8E96', fontSize: 12, margin: '10px 0 0' }}>No camera? Type or paste a Registration ID.</p>
+              </div>
+
+              <div style={{ ...styles.recentCard, marginTop: 24 }}>
+                <h4 style={{ margin: '0 0 12px', fontSize: 16 }}>Recent Check-Ins</h4>
+                {recentCheckins.length === 0 ? (
+                  <p style={{ color: '#8A8E96', fontSize: 13 }}>No check-ins yet.</p>
+                ) : recentCheckins.map((r) => (
+                  <div key={r.regId} className="recent-item">
+                    <div>
+                      <div className="name">{r.fullName}</div>
+                      <div className="meta">{r.regId}</div>
                     </div>
-                  ))}
-                </div>
+                    <div className="meta">{r.checkedInAt ? new Date(r.checkedInAt).toLocaleTimeString() : ''}</div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -661,27 +640,6 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: 'wrap',
     gap: 14,
   },
-  tabs: {
-    display: 'flex',
-    gap: 8,
-    marginBottom: 26,
-    borderBottom: '1px solid var(--line)',
-    overflowX: 'auto',
-  },
-  tabBtn: {
-    background: 'none',
-    border: 'none',
-    padding: '12px 4px',
-    marginRight: 22,
-    fontFamily: 'var(--font-mono)',
-    fontSize: 12.5,
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-    borderBottom: '2px solid transparent',
-    whiteSpace: 'nowrap',
-    minHeight: 44,
-    cursor: 'pointer',
-  },
   statsRow: {
     display: 'grid',
     gridTemplateColumns: 'repeat(3, 1fr)',
@@ -769,13 +727,7 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     border: '1px solid var(--line)',
   },
-  checkinGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: 24,
-    alignItems: 'start',
-  },
-  scannerCard: {
+  recentCard: {
     background: '#fff',
     border: '1px solid var(--line)',
     borderRadius: 8,
@@ -797,13 +749,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-mono)',
     fontSize: 14,
     minWidth: 0,
-  },
-  recentCard: {
-    background: '#fff',
-    border: '1px solid var(--line)',
-    borderRadius: 8,
-    padding: 24,
-    boxShadow: 'var(--shadow-card)',
   },
   modalOverlay: {
     position: 'fixed',
