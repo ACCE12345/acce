@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import { Fraunces, Public_Sans, IBM_Plex_Mono } from 'next/font/google';
 import { ToastProvider } from '@/lib/toast';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import ConditionalChrome from '@/components/ConditionalChrome';
 import './globals.css';
 
 const fraunces = Fraunces({
@@ -41,9 +40,9 @@ export default function RootLayout({
     <html lang="en" className={`${fraunces.variable} ${publicSans.variable} ${ibmPlexMono.variable}`} suppressHydrationWarning>
       <body>
         <ToastProvider>
-          <Header />
-          {children}
-          <Footer />
+          <ConditionalChrome>
+            {children}
+          </ConditionalChrome>
         </ToastProvider>
       </body>
     </html>
