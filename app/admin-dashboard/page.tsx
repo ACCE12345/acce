@@ -280,26 +280,28 @@ export default function AdminDashboardPage() {
           <span style={styles.topBarBrand}>ACCE (India)</span>
           <Link href="/" style={styles.viewSiteLink}>← View Site</Link>
         </div>
-        <div style={styles.topBarNav} className="admin-topbar-nav">
-          {([
-            { id: 'registrations' as Tab, label: 'Registrations' },
-            { id: 'sponsorships' as Tab, label: 'Sponsorships' },
-            { id: 'checkin' as Tab, label: 'Check-In' },
-          ]).map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setTab(item.id)}
-              style={{
-                ...styles.topNavLink,
-                background: tab === item.id ? 'var(--ink)' : 'transparent',
-                color: tab === item.id ? 'var(--paper)' : '#B8CCE4',
-              }}
-            >
-              {item.label}
-            </button>
-          ))}
+        <div style={styles.topBarRight}>
+          <div style={styles.topBarNav} className="admin-topbar-nav">
+            {([
+              { id: 'registrations' as Tab, label: 'Registrations' },
+              { id: 'sponsorships' as Tab, label: 'Sponsorships' },
+              { id: 'checkin' as Tab, label: 'Check-In' },
+            ]).map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setTab(item.id)}
+                style={{
+                  ...styles.topNavLink,
+                  background: tab === item.id ? 'var(--paper)' : 'transparent',
+                  color: tab === item.id ? 'var(--ink)' : '#B8CCE4',
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          <button onClick={handleLogout} style={styles.logoutBtn} className="logout-btn">Log Out</button>
         </div>
-        <button onClick={handleLogout} style={styles.logoutBtn} className="logout-btn">Log Out</button>
       </div>
 
       <div style={styles.main} className="admin-main-wrap">
@@ -569,6 +571,11 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: 'wrap',
   },
   topBarLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+  },
+  topBarRight: {
     display: 'flex',
     alignItems: 'center',
     gap: 12,
