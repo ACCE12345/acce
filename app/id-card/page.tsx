@@ -124,7 +124,7 @@ function IdCardContent() {
 
           <div style={styles.idcardBody}>
             <div style={styles.name}>{record.fullName}</div>
-            <div style={styles.role}>{record.isACCEMember ? 'ACCE Member — Delegate' : 'Delegate'}</div>
+            <div style={styles.role}>{record.category || 'Delegate'}</div>
 
             <div style={styles.photoWrap}>
               <div style={styles.photoCircle}>
@@ -137,7 +137,6 @@ function IdCardContent() {
 
             <div style={styles.details}>
               <DetailRow label="Reg. ID" value={record.regId} />
-              <DetailRow label="Category" value={record.category || 'Delegate'} />
               <DetailRow label="Email" value={record.email} />
               <DetailRow label="Phone" value={`+91 ${record.mobile}`} />
             </div>

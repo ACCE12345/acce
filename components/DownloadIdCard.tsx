@@ -122,7 +122,7 @@ export default function DownloadIdCard({ variant = 'light' }: { variant?: 'light
               <div style={{ padding: '12px 28px 10px', textAlign: 'center' }}>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: 23, marginBottom: 4, fontWeight: 700 }}>{record.fullName}</div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: '#2E63A8', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>
-                  {record.isACCEMember ? 'ACCE Member — Delegate' : 'Delegate'}
+                  {record.category || 'Delegate'}
                 </div>
 
                 {/* Avatar */}
@@ -142,7 +142,6 @@ export default function DownloadIdCard({ variant = 'light' }: { variant?: 'light
                 <div style={{ textAlign: 'left', marginTop: 22, borderTop: '1px dashed rgba(10,38,71,0.12)', paddingTop: 18 }}>
                   {[
                     ['Reg. ID', record.regId],
-                    ['Category', record.category || 'Delegate'],
                     ['Email', record.email],
                     ['Phone', `+91 ${record.mobile}`],
                   ].map(([label, value]) => (
