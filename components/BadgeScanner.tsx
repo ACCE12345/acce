@@ -17,6 +17,7 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
   const [scanResult, setScanResult] = useState<string | null>(null);
   const [scanStatus, setScanStatus] = useState<'idle' | 'scanning' | 'success' | 'error' | 'already-checked-in'>('idle');
   const [alreadyCheckedInName, setAlreadyCheckedInName] = useState<string>('');
+  const [errorMsg, setErrorMsg] = useState<string>('');
 
   const processScan = useCallback(async (regId: string) => {
     try {
@@ -50,7 +51,6 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
     }
   }, [showToast, onCheckInSuccess]);
 
-  // Import jsQR dynamically to avoid SSR issues
   const decodeQRCode = useCallback(async (canvas: HTMLCanvasElement): Promise<string | null> => {
     try {
       const jsQRModule = await import('jsqr');
@@ -100,31 +100,43 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
   }, [decodeQRCode, processScan]);
 
   const startCamera = useCallback(async () => {
+    setErrorMsg('');
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        const msg = 'Camera not supported on this device/browser.';
+        setErrorMsg(msg);
+        showToast(msg, 'error');
+        return;
+      }
+
       let stream: MediaStream;
-      
+
       try {
-        // Try environment-facing camera first (mobile devices)
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: 'environment',
             width: { ideal: 1280 },
             height: { ideal: 720 },
           },
+          audio: false,
         });
       } catch {
-        // Fall back to any available camera (desktop/front-facing)
         stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-          },
+          video: true,
+          audio: false,
         });
       }
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
+
+        await new Promise<void>((resolve) => {
+          if (videoRef.current) {
+            videoRef.current.onloadedmetadata = () => resolve();
+          }
+        });
+
         await videoRef.current.play();
 
         setIsCameraActive(true);
@@ -137,26 +149,23 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
     } catch (error: any) {
       console.error('Camera error:', error);
       setScanStatus('error');
-      const errMsg = error?.message || '';
-      let toastMsg = 'Failed to access camera. Please try again.';
-      let helpMsg = 'If the issue persists, check your browser permissions.';
+      const errMsg = error?.message || error?.name || '';
+      let msg = '';
 
-      if (errMsg.includes('Permission dismissed') || errMsg.includes('Permission denied')) {
-        toastMsg = 'Camera permission was denied or dismissed.';
-        helpMsg = 'Please allow camera access in your browser settings and try again.';
-      } else if (errMsg.includes('NotAllowedError') || error?.name === 'NotAllowedError') {
-        toastMsg = 'Camera access not allowed.';
-        helpMsg = 'Please grant camera permission in your browser settings.';
-      } else if (errMsg.includes('NotFoundError') || error?.name === 'NotFoundError') {
-        toastMsg = 'No camera found on this device.';
-      } else if (errMsg.includes('NotReadableError') || error?.name === 'NotReadableError') {
-        toastMsg = 'Camera is in use by another application.';
-        helpMsg = 'Please close other apps using the camera and try again.';
-      } else if (errMsg.includes('Secure')) {
-        toastMsg = 'Camera requires a secure connection (HTTPS).';
+      if (errMsg.includes('Permission') || errMsg.includes('denied') || error?.name === 'NotAllowedError') {
+        msg = 'Camera permission denied. Please allow camera access in your browser/device settings and reload.';
+      } else if (error?.name === 'NotFoundError') {
+        msg = 'No camera found on this device.';
+      } else if (error?.name === 'NotReadableError') {
+        msg = 'Camera is in use by another app.';
+      } else if (errMsg.includes('Secure') || (typeof location !== 'undefined' && location.protocol !== 'https:')) {
+        msg = 'Camera requires HTTPS. Please use a secure connection.';
+      } else {
+        msg = 'Could not access camera. Please check permissions and try again.';
       }
 
-      showToast(`${toastMsg} ${helpMsg}`, 'error');
+      setErrorMsg(msg);
+      showToast(msg, 'error');
     }
   }, [showToast, startScanning]);
 
@@ -195,9 +204,6 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
         <p style={{ color: '#8A8E96', fontSize: 14, margin: '8px 0 0' }}>
           Point the camera at a delegate&apos;s badge QR to validate &amp; check them in.
         </p>
-        <p style={{ color: '#8A8E96', fontSize: 12, margin: '4px 0 0' }}>
-          Requires camera permission. Click "Activate Camera" and allow access when prompted.
-        </p>
       </div>
 
       <div style={styles.scannerViewport}>
@@ -209,7 +215,6 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
           }}
           playsInline
           muted
-          autoPlay
         />
         <canvas
           ref={canvasRef}
@@ -268,9 +273,12 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
           </>
         ) : (
           <div style={styles.scannerPlaceholder}>
-            <div style={{ fontSize: 36, marginBottom: 16, opacity: 0.3, fontFamily: 'var(--font-mono)', color: '#9CA3AF' }}>[CAM]</div>
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 16, opacity: 0.4 }}>
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
             <div style={{ fontSize: 16, marginBottom: 20, color: '#9CA3AF' }}>
-              No camera active
+              Tap to activate camera
             </div>
             <button
               onClick={startCamera}
@@ -282,15 +290,9 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
             >
               Activate Camera
             </button>
-            {scanStatus === 'error' && (
-              <div style={{ marginTop: 12, color: '#EF4444', fontSize: 13, textAlign: 'center', padding: '8px 12px' }}>
-                Camera access failed. Check permissions and try again.
-                <br />
-                <span style={{ opacity: 0.8, fontSize: 11 }}>
-                  Ensure the site has camera permission in your browser settings.
-                  <br />
-                  Note: Camera access requires a secure connection (HTTPS).
-                </span>
+            {errorMsg && (
+              <div style={{ marginTop: 12, color: '#EF4444', fontSize: 13, textAlign: 'center', padding: '8px 12px', background: 'rgba(239,68,68,0.1)', borderRadius: 8 }}>
+                {errorMsg}
               </div>
             )}
           </div>
@@ -326,12 +328,12 @@ const styles: Record<string, React.CSSProperties> = {
   scannerViewport: {
     position: 'relative',
     width: '100%',
-    aspectRatio: '1/1',
     maxWidth: 340,
     background: '#000',
     borderRadius: 8,
     overflow: 'hidden',
     margin: '0 auto 20px',
+    aspectRatio: '1/1',
   },
   scannerVideo: {
     width: '100%',
@@ -377,6 +379,7 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'center',
     background: '#1F2937',
     color: '#9CA3AF',
+    padding: 20,
   },
   scanOverlay: {
     position: 'absolute',
@@ -390,6 +393,7 @@ const styles: Record<string, React.CSSProperties> = {
   scanSuccess: {
     textAlign: 'center',
     color: '#fff',
+    padding: 20,
   },
   actionButton: {
     padding: '12px 24px',
