@@ -76,6 +76,17 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // Protect gallery admin routes (GET is public)
+  if (pathname.startsWith('/api/gallery') && pathname !== '/api/gallery') {
+    const method = request.method;
+    if (method !== 'GET') {
+      const accessToken = request.cookies.get('sb-access-token')?.value;
+      if (!accessToken) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    }
+  }
+
   // Rate limit API routes (except verify — public, read-only, low cost)
   if (pathname.startsWith('/api/') && !pathname.startsWith('/api/verify')) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()

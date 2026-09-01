@@ -31,6 +31,16 @@ export interface Sponsorship {
   createdAt: string;
 }
 
+export interface GalleryImage {
+  id: string;
+  title: string | null;
+  caption: string | null;
+  image_url: string;
+  storage_path: string | null;
+  sort_order: number;
+  created_at: string;
+}
+
 export interface PaginatedResult<T> {
   items: T[];
   total: number;
@@ -317,4 +327,28 @@ export function debounce<T extends (...args: never[]) => void>(fn: T, ms: number
     if (timer) clearTimeout(timer);
   };
   return debounced as unknown as T & { cancel: () => void };
+}
+
+// ── Gallery ──────────────────────────────────────────
+
+export async function getGalleryImages(): Promise<GalleryImage[]> {
+  const data = await apiFetch<{ images: GalleryImage[] }>('/api/gallery');
+  return data.images || [];
+}
+
+export async function uploadGalleryImage(file: File, title?: string, caption?: string): Promise<void> {
+  const formData = new FormData();
+  formData.append('file', file);
+  if (title) formData.append('title', title);
+  if (caption) formData.append('caption', caption);
+
+  const res = await fetch('/api/gallery', { method: 'POST', body: formData });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `Upload failed (${res.status})`);
+  }
+}
+
+export async function deleteGalleryImage(id: string): Promise<void> {
+  await apiFetch(`/api/gallery/${id}`, { method: 'DELETE' });
 }

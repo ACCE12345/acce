@@ -125,16 +125,15 @@ export default function DownloadIdCard({ variant = 'light' }: { variant?: 'light
                 </div>
 
                 {/* Avatar */}
-                <div style={{ display: 'flex', justifyContent: 'center', margin: '14px 0' }}>
+                <div style={{ margin: '14px auto', width: 80, height: 80, position: 'relative' }}>
                   <div style={{
                     width: 80, height: 80, borderRadius: '50%', border: '3px solid #fff',
                     background: 'linear-gradient(135deg, #0A2647, #1D4E86)',
                     overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,.25)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     {record.photo
-                      ? <img src={record.photo} alt={record.fullName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      : <span style={{ fontSize: 36, fontWeight: 700, color: '#fff' }}>{record.fullName.charAt(0)}</span>
+                      ? <img src={record.photo} alt={record.fullName} crossOrigin="anonymous" style={{ width: 80, height: 80, display: 'block' }} />
+                      : <span style={{ fontSize: 36, fontWeight: 700, color: '#fff', lineHeight: '74px', textAlign: 'center', display: 'block' }}>{record.fullName.charAt(0)}</span>
                     }
                   </div>
                 </div>

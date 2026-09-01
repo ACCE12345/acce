@@ -7,6 +7,7 @@ import HeroSlideshow from '@/components/HeroSlideshow';
 import HeroActions from '@/components/HeroActions';
 import DownloadIdCard from '@/components/DownloadIdCard';
 import CountUp from '@/components/CountUp';
+import { getGalleryImages, type GalleryImage } from '@/lib/nexus-store';
 
 const COMMITTEE = [
   { name: 'Er. Mohammed Hidayath Ali', role: 'Bylaw Amendments Collegium member, ACCE(I), HQ · Convener Build Expo-2026', photo: '/img/Er_Mohammed_Hidayath_Ali.png', contact: '+91 9849453978' },
@@ -21,10 +22,15 @@ const COMMITTEE = [
 
 export default function Home() {
   const [showPoster, setShowPoster] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowPoster(true), 1000);
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    getGalleryImages().then(setGalleryImages).catch(() => {});
   }, []);
 
   return (
@@ -301,6 +307,35 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ── Gallery ── */}
+      {galleryImages.length > 0 && (
+        <section className="section" id="gallery" style={{ background: 'var(--paper)' }}>
+          <div className="container">
+            <div className="section-head" style={{ textAlign: 'center', maxWidth: 640, margin: '0 auto 40px' }}>
+              <span className="eyebrow">Gallery</span>
+              <h2>Event Moments</h2>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
+              {galleryImages.map((img) => (
+                <div key={img.id} style={{ borderRadius: 12, overflow: 'hidden', background: '#fff', boxShadow: '0 8px 30px -10px rgba(10,38,71,0.18)', transition: 'transform 0.2s ease', cursor: 'pointer' }}>
+                  <img
+                    src={img.image_url}
+                    alt={img.title || 'Event photo'}
+                    style={{ width: '100%', height: 220, objectFit: 'cover', display: 'block' }}
+                  />
+                  {(img.title || img.caption) && (
+                    <div style={{ padding: '14px 16px' }}>
+                      {img.title && <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15, color: '#0A2647', marginBottom: 2 }}>{img.title}</div>}
+                      {img.caption && <div style={{ fontSize: 13, color: '#5A6270' }}>{img.caption}</div>}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── CTA Banner ── */}
       <section className="cta-banner">

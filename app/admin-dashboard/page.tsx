@@ -16,12 +16,16 @@ import {
   toCSV,
   downloadCSV,
   debounce,
+  getGalleryImages,
+  uploadGalleryImage,
+  deleteGalleryImage,
   type Registration,
   type Sponsorship,
+  type GalleryImage,
 } from '@/lib/nexus-store';
 import { useToast } from '@/lib/toast';
 
-type Tab = 'registrations' | 'sponsorships' | 'checkin';
+type Tab = 'registrations' | 'sponsorships' | 'checkin' | 'gallery';
 type RegModalMode = 'view' | 'edit' | null;
 
 const PAGE_SIZE = 50;
@@ -48,6 +52,11 @@ export default function AdminDashboardPage() {
   const [manualId, setManualId] = useState('');
   const [recentCheckins, setRecentCheckins] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const [galleryFile, setGalleryFile] = useState<File | null>(null);
+  const [galleryTitle, setGalleryTitle] = useState('');
+  const [galleryUploading, setGalleryUploading] = useState(false);
 
   const regsRef = useRef<Registration[]>([]);
 
@@ -113,15 +122,22 @@ export default function AdminDashboardPage() {
     } catch { /* ignore */ }
   }, []);
 
+  const loadGallery = useCallback(async () => {
+    try {
+      const images = await getGalleryImages();
+      setGalleryImages(images);
+    } catch { /* ignore */ }
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
-        await Promise.allSettled([refreshRegs(), refreshSpns(), refreshCheckins()]);
+        await Promise.allSettled([refreshRegs(), refreshSpns(), refreshCheckins(), loadGallery()]);
       } finally {
         setLoading(false);
       }
     })();
-  }, [refreshRegs, refreshSpns, refreshCheckins]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [refreshRegs, refreshSpns, refreshCheckins, loadGallery]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const debouncedRegSearchRef = useRef<((val: string) => void) & { cancel: () => void } | null>(null);
   const debouncedSpnSearchRef = useRef<((val: string) => void) & { cancel: () => void } | null>(null);
@@ -290,6 +306,36 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleGalleryUpload = async () => {
+    if (!galleryFile) { showToast('Select an image to upload.', 'error'); return; }
+    if (galleryFile.size > 5 * 1024 * 1024) { showToast('Image must be under 5MB.', 'error'); return; }
+    setGalleryUploading(true);
+    try {
+      await uploadGalleryImage(galleryFile, galleryTitle);
+      showToast('Image uploaded.', 'success');
+      setGalleryFile(null);
+      setGalleryTitle('');
+      const fileInput = document.getElementById('gallery-file-input') as HTMLInputElement | null;
+      if (fileInput) fileInput.value = '';
+      await loadGallery();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Upload failed.', 'error');
+    } finally {
+      setGalleryUploading(false);
+    }
+  };
+
+  const handleGalleryDelete = async (id: string) => {
+    if (!confirm('Delete this gallery image? This cannot be undone.')) return;
+    try {
+      await deleteGalleryImage(id);
+      showToast('Image deleted.', 'success');
+      await loadGallery();
+    } catch {
+      showToast('Delete failed.', 'error');
+    }
+  };
+
   const regTotalPages = Math.ceil(regTotal / PAGE_SIZE);
   const spnTotalPages = Math.ceil(spnTotal / PAGE_SIZE);
 
@@ -318,6 +364,7 @@ export default function AdminDashboardPage() {
               { id: 'registrations' as Tab, label: 'Registrations' },
               { id: 'sponsorships' as Tab, label: 'Sponsorships' },
               { id: 'checkin' as Tab, label: 'Check-In' },
+              { id: 'gallery' as Tab, label: 'Gallery' },
             ]).map((item) => (
               <button
                 key={item.id}
@@ -581,6 +628,77 @@ export default function AdminDashboardPage() {
                     <div className="meta">{r.checkedInAt ? new Date(r.checkedInAt).toLocaleTimeString() : ''}</div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* -- GALLERY TAB -- */}
+          {tab === 'gallery' && (
+            <div>
+              <div style={styles.manualCard}>
+                <h4 style={{ margin: '0 0 12px', fontSize: 16 }}>Upload Gallery Image</h4>
+                <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 10, maxWidth: 500 }}>
+                  <input
+                    id="gallery-file-input"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setGalleryFile(e.target.files?.[0] || null)}
+                    style={{ fontSize: 13 }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Title (optional)"
+                    value={galleryTitle}
+                    onChange={(e) => setGalleryTitle(e.target.value)}
+                    style={styles.manualInput}
+                  />
+                  <button
+                    className="btn btn-gold"
+                    onClick={handleGalleryUpload}
+                    disabled={galleryUploading || !galleryFile}
+                    style={{ minWidth: 140, minHeight: 40 }}
+                  >
+                    {galleryUploading ? 'Uploading…' : 'Upload Image'}
+                  </button>
+                </div>
+                <p style={{ color: '#8A8E96', fontSize: 12, margin: '10px 0 0' }}>Max 5MB. Images appear on the public homepage gallery section.</p>
+              </div>
+
+              <div style={{ ...styles.recentCard, marginTop: 24 }}>
+                <h4 style={{ margin: '0 0 16px', fontSize: 16 }}>Gallery Images ({galleryImages.length})</h4>
+                {galleryImages.length === 0 ? (
+                  <p style={{ color: '#8A8E96', fontSize: 13 }}>No gallery images yet. Upload one above.</p>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
+                    {galleryImages.map((img) => (
+                      <div key={img.id} style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', background: '#f0f0f0', border: '1px solid var(--line)' }}>
+                        <img
+                          src={img.image_url}
+                          alt={img.title || 'Gallery image'}
+                          style={{ width: '100%', height: 140, objectFit: 'cover', display: 'block' }}
+                        />
+                        <div style={{ padding: '8px 10px' }}>
+                          {img.title && <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{img.title}</div>}
+                          {img.caption && <div style={{ fontSize: 11, color: '#8A8E96' }}>{img.caption}</div>}
+                          <div style={{ fontSize: 10, color: '#B8CCE4', marginTop: 4 }}>{new Date(img.created_at).toLocaleDateString()}</div>
+                        </div>
+                        <button
+                          onClick={() => handleGalleryDelete(img.id)}
+                          style={{
+                            position: 'absolute', top: 6, right: 6,
+                            width: 28, height: 28, borderRadius: '50%',
+                            background: 'rgba(10,38,71,0.85)', color: '#fff',
+                            border: 'none', cursor: 'pointer', fontSize: 16,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}
+                          title="Delete"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

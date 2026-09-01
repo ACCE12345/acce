@@ -128,8 +128,8 @@ function IdCardContent() {
             <div style={styles.photoWrap}>
               <div style={styles.photoCircle}>
                 {record.photo
-                  ? <img src={record.photo} alt={record.fullName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span style={{ fontSize: 36, fontWeight: 700, color: '#fff' }}>{record.fullName.charAt(0)}</span>
+                  ? <img src={record.photo} alt={record.fullName} crossOrigin="anonymous" style={{ width: 80, height: 80, display: 'block' }} />
+                  : <span style={{ fontSize: 36, fontWeight: 700, color: '#fff', lineHeight: '74px', textAlign: 'center', display: 'block' }}>{record.fullName.charAt(0)}</span>
                 }
               </div>
             </div>
@@ -256,8 +256,7 @@ const styles: Record<string, React.CSSProperties> = {
     margin: 0,
   },
   photoWrap: {
-    display: 'flex',
-    justifyContent: 'center',
+    textAlign: 'center',
     margin: '14px 0',
   },
   photoCircle: {
@@ -268,9 +267,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'linear-gradient(135deg, #0A2647, #1D4E86)',
     overflow: 'hidden',
     boxShadow: '0 4px 12px rgba(0,0,0,.25)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    margin: '0 auto',
   },
   idcardBody: {
     padding: '12px 28px 10px',
