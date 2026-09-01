@@ -121,7 +121,7 @@ export default function AdminDashboardPage() {
         setLoading(false);
       }
     })();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [refreshRegs, refreshSpns, refreshCheckins]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const debouncedRegSearchRef = useRef<((val: string) => void) & { cancel: () => void } | null>(null);
   const debouncedSpnSearchRef = useRef<((val: string) => void) & { cancel: () => void } | null>(null);

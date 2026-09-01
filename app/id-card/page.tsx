@@ -3,7 +3,6 @@
 import React, { useState, useRef, Suspense, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { findRegistration, captureElementAsImage } from '@/lib/nexus-store';
 import { useToast } from '@/lib/toast';
 import type { Registration } from '@/lib/nexus-store';
@@ -116,8 +115,8 @@ function IdCardContent() {
         <div ref={cardRef} style={styles.idcard}>
           <div style={styles.idcardHead}>
             <div style={styles.logoRow}>
-              <Image src="/img/logo.png" alt="ACCE" width={60} height={44} style={{ height: 44, width: 'auto', objectFit: 'contain' }} />
-              <Image src="/img/2.jpeg" alt="Partner" width={60} height={44} style={{ height: 44, width: 'auto', objectFit: 'contain' }} />
+              <img src="/img/logo.png" alt="ACCE" style={{ height: 44, width: 'auto' }} />
+              <img src="/img/2.jpeg" alt="Partner" style={{ height: 44, width: 'auto' }} />
             </div>
             <h3 style={styles.headTitle}>Build Expo 2026</h3>
           </div>
@@ -201,7 +200,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   bannerTitle: {
     fontFamily: "'Fraunces', serif",
-    fontSize: 'clamp(30px, 4vw, 48px)',
+    fontSize: 40,
     color: '#FFFFFF',
     margin: 0,
     lineHeight: 1.15,

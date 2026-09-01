@@ -51,36 +51,6 @@ export function middleware(request: NextRequest) {
   const url = new URL(request.url);
   const pathname = url.pathname;
 
-  // Rate limit API routes (except verify — public, read-only, low cost)
-  if (pathname.startsWith('/api/') && !pathname.startsWith('/api/verify')) {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || '127.0.0.1';
-    const isWrite = request.method !== 'GET';
-    const { allowed, remaining, resetAt } = checkRate(ip, isWrite);
-
-    if (!allowed) {
-      const retryAfter = Math.ceil((resetAt - Date.now()) / 1000);
-      return NextResponse.json(
-        { error: 'Too many requests. Please slow down.' },
-        {
-          status: 429,
-          headers: {
-            'Retry-After': String(retryAfter),
-            'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': String(Math.ceil(resetAt / 1000)),
-          },
-        }
-      );
-    }
-
-    // Add rate limit headers to successful responses
-    const response = NextResponse.next();
-    response.headers.set('X-RateLimit-Remaining', String(remaining));
-    response.headers.set('X-RateLimit-Reset', String(Math.ceil(resetAt / 1000)));
-    return response;
-  }
-
   // Protect admin dashboard — check Supabase auth cookie
   if (pathname.startsWith('/admin-dashboard')) {
     const accessToken = request.cookies.get('sb-access-token')?.value;
@@ -104,6 +74,35 @@ export function middleware(request: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     }
+  }
+
+  // Rate limit API routes (except verify — public, read-only, low cost)
+  if (pathname.startsWith('/api/') && !pathname.startsWith('/api/verify')) {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const isWrite = request.method !== 'GET';
+    const { allowed, remaining, resetAt } = checkRate(ip, isWrite);
+
+    if (!allowed) {
+      const retryAfter = Math.ceil((resetAt - Date.now()) / 1000);
+      return NextResponse.json(
+        { error: 'Too many requests. Please slow down.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(retryAfter),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': String(Math.ceil(resetAt / 1000)),
+          },
+        }
+      );
+    }
+
+    const response = NextResponse.next();
+    response.headers.set('X-RateLimit-Remaining', String(remaining));
+    response.headers.set('X-RateLimit-Reset', String(Math.ceil(resetAt / 1000)));
+    return response;
   }
 
   return NextResponse.next();

@@ -2,7 +2,6 @@
 
 import { useState, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { findRegistrationByMobile, captureElementAsImage, type Registration } from '@/lib/nexus-store';
 import { useToast } from '@/lib/toast';
 import QrCode from '@/components/QrCode';
@@ -110,8 +109,8 @@ export default function DownloadIdCard({ variant = 'light' }: { variant?: 'light
                 padding: '20px 28px 24px', textAlign: 'center',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, marginBottom: 10 }}>
-                  <Image src="/img/logo.png" alt="ACCE" width={60} height={44} style={{ height: 44, width: 'auto', objectFit: 'contain' }} />
-                  <Image src="/img/2.jpeg" alt="Partner" width={60} height={44} style={{ height: 44, width: 'auto', objectFit: 'contain' }} />
+                  <img src="/img/logo.png" alt="ACCE" style={{ height: 44, width: 'auto' }} />
+                  <img src="/img/2.jpeg" alt="Partner" style={{ height: 44, width: 'auto' }} />
                 </div>
                 <h3 style={{ color: '#fff', fontSize: 20, letterSpacing: '0.08em', textTransform: 'uppercase' as const, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, margin: 0 }}>
                   Build Expo 2026
