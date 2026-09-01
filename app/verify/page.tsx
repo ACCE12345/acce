@@ -55,7 +55,7 @@ function VerifyContent() {
 
       <div style={styles.shell}>
         <div style={styles.card}>
-          <div style={styles.lookupRow}>
+          <div className="verify-lookup" style={styles.lookupRow}>
             <input
               type="text"
               placeholder="Enter Registration ID e.g. REG-XXXXX"
@@ -167,7 +167,8 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid var(--line)',
     borderRadius: 3,
     fontFamily: 'var(--font-mono)',
-    fontSize: 13,
+    fontSize: 16,
+    minHeight: 48,
   },
   statusValid: {
     padding: '40px 30px 26px',

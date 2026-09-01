@@ -43,7 +43,9 @@ export default function Home() {
             alignItems: 'center',
             justifyContent: 'center',
             padding: 'env(safe-area-inset-top, 16px) 16px env(safe-area-inset-bottom, 16px)',
-            animation: 'fadeIn 0.3s ease',
+            animation: 'gpuFadeIn 0.3s ease',
+            willChange: 'opacity',
+            transform: 'translateZ(0)',
           }}
           onClick={() => setShowPoster(false)}
         >
@@ -58,7 +60,9 @@ export default function Home() {
               overflow: 'hidden',
               boxShadow: '0 30px 80px -20px rgba(0,0,0,0.5)',
               border: '3px solid var(--gold)',
-              animation: 'scaleIn 0.3s ease',
+              animation: 'gpuScaleIn 0.3s ease',
+              willChange: 'transform, opacity',
+              transform: 'translateZ(0)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -146,6 +150,8 @@ export default function Home() {
               width: '100%',
               transform: 'rotateY(-4deg)',
               transition: 'transform 0.4s ease, box-shadow 0.4s ease',
+              willChange: 'transform',
+              backfaceVisibility: 'hidden',
             }}>
               <Image
                 src="/img/poste.jpeg"

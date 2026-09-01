@@ -21,13 +21,15 @@ export default function CountUp({ end, suffix = '', duration = 2000 }: CountUpPr
       ([entry]) => {
         if (entry.isIntersecting && !started.current) {
           started.current = true;
-          const startTime = Date.now();
-          const tick = () => {
-            const elapsed = Date.now() - startTime;
+          const startTime = performance.now();
+          const tick = (now: number) => {
+            const elapsed = now - startTime;
             const progress = Math.min(elapsed / duration, 1);
             const eased = 1 - Math.pow(1 - progress, 3);
             setCount(Math.floor(eased * end));
-            if (progress < 1) requestAnimationFrame(tick);
+            if (progress < 1) {
+              requestAnimationFrame(tick);
+            }
           };
           requestAnimationFrame(tick);
         }
@@ -39,5 +41,12 @@ export default function CountUp({ end, suffix = '', duration = 2000 }: CountUpPr
     return () => observer.disconnect();
   }, [end, duration]);
 
-  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
+  return (
+    <span
+      ref={ref}
+      style={{ willChange: 'transform', transform: 'translateZ(0)' }}
+    >
+      {count.toLocaleString()}{suffix}
+    </span>
+  );
 }

@@ -12,6 +12,9 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
   const streamRef = useRef<MediaStream | null>(null);
   const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const scanStatusRef = useRef<'idle' | 'scanning' | 'success' | 'error' | 'already-checked-in'>('idle');
+  const processingRef = useRef(false);
+  const lastScannedRef = useRef<string>('');
+  const lastScanTimeRef = useRef(0);
 
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [scanResult, setScanResult] = useState<string | null>(null);
@@ -20,6 +23,13 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
   const [errorMsg, setErrorMsg] = useState<string>('');
 
   const processScan = useCallback(async (regId: string) => {
+    if (processingRef.current) return;
+    if (lastScannedRef.current === regId && Date.now() - lastScanTimeRef.current < 3000) return;
+
+    processingRef.current = true;
+    lastScannedRef.current = regId;
+    lastScanTimeRef.current = Date.now();
+
     try {
       const rec = await findRegistration(regId);
 
@@ -42,12 +52,16 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
       await checkIn(regId);
       showToast(`${rec.fullName} checked in.`, 'success');
       setScanResult(regId);
+      setScanStatus('success');
+      scanStatusRef.current = 'success';
       onCheckInSuccess?.(rec);
 
     } catch {
       showToast('Scan processing failed.', 'error');
       setScanStatus('error');
       scanStatusRef.current = 'error';
+    } finally {
+      processingRef.current = false;
     }
   }, [showToast, onCheckInSuccess]);
 
@@ -73,6 +87,7 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
     if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
     scanIntervalRef.current = setInterval(async () => {
       if (!videoRef.current || !canvasRef.current || scanStatusRef.current !== 'scanning') return;
+      if (processingRef.current) return;
 
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -96,7 +111,7 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
           processScan(decoded);
         }
       }
-    }, 500);
+    }, 750);
   }, [decodeQRCode, processScan]);
 
   const startCamera = useCallback(async () => {
@@ -146,17 +161,18 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
 
         startScanning();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Camera error:', error);
       setScanStatus('error');
-      const errMsg = error?.message || error?.name || '';
+      const errObj = error as { message?: string; name?: string };
+      const errMsg = errObj?.message || errObj?.name || '';
       let msg = '';
 
-      if (errMsg.includes('Permission') || errMsg.includes('denied') || error?.name === 'NotAllowedError') {
+      if (errMsg.includes('Permission') || errMsg.includes('denied') || errObj?.name === 'NotAllowedError') {
         msg = 'Camera permission denied. Please allow camera access in your browser/device settings and reload.';
-      } else if (error?.name === 'NotFoundError') {
+      } else if (errObj?.name === 'NotFoundError') {
         msg = 'No camera found on this device.';
-      } else if (error?.name === 'NotReadableError') {
+      } else if (errObj?.name === 'NotReadableError') {
         msg = 'Camera is in use by another app.';
       } else if (errMsg.includes('Secure') || (typeof location !== 'undefined' && location.protocol !== 'https:')) {
         msg = 'Camera requires HTTPS. Please use a secure connection.';
@@ -182,12 +198,15 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
     setScanStatus('idle');
     scanStatusRef.current = 'idle';
     setScanResult(null);
+    processingRef.current = false;
   };
 
   const resetScanner = () => {
     setScanResult(null);
     setScanStatus('scanning');
     scanStatusRef.current = 'scanning';
+    processingRef.current = false;
+    lastScannedRef.current = '';
     startScanning();
   };
 
@@ -232,7 +251,7 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
             )}
 
             {scanStatus === 'success' && scanResult && (
-              <div style={styles.scanOverlay}>
+              <div style={styles.scanOverlay} className="gpu-fade">
                 <div style={styles.scanSuccess}>
                   <div style={{ fontSize: 32, marginBottom: 8, color: '#22c55e', fontWeight: 700 }}>PASS</div>
                   <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
@@ -249,7 +268,7 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
             )}
 
             {scanStatus === 'already-checked-in' && (
-              <div style={{ ...styles.scanOverlay, background: 'rgba(180,40,40,0.85)' }}>
+              <div style={{ ...styles.scanOverlay, background: 'rgba(180,40,40,0.85)' }} className="gpu-fade">
                 <div style={styles.scanSuccess}>
                   <div style={{ fontSize: 32, marginBottom: 8, color: '#EF4444', fontWeight: 700 }}>DENIED</div>
                   <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', marginBottom: 4 }}>
@@ -368,7 +387,9 @@ const styles: Record<string, React.CSSProperties> = {
     height: '2px',
     background: 'var(--gold-bright)',
     boxShadow: '0 0 10px rgba(255,255,255,0.5)',
-    animation: 'scan 2s linear infinite',
+    animation: 'gpuScan 2s linear infinite',
+    willChange: 'transform',
+    transform: 'translateZ(0)',
   },
   scannerPlaceholder: {
     position: 'absolute',
@@ -406,5 +427,7 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     fontWeight: 600,
     transition: 'transform 0.2s, box-shadow 0.2s',
+    willChange: 'transform',
+    transform: 'translateZ(0)',
   },
 };

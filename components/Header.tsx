@@ -33,6 +33,7 @@ export default function Header() {
   return (
     <header
       className={`site-header${scrolled ? ' scrolled' : ''}`}
+      style={{ willChange: 'background, box-shadow', transform: 'translateZ(0)' }}
     >
       <nav className="nav">
         <Link href="/" className="brand">

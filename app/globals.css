@@ -1,4 +1,60 @@
 /* =========================================================
+   GPU ACCELERATION — compositor layer hints
+   ========================================================= */
+.gpu-accelerated{
+  will-change:transform,opacity;
+  transform:translateZ(0);
+  backface-visibility:hidden;
+}
+.gpu-layer{
+  will-change:transform;
+  transform:translate3d(0,0,0);
+}
+.gpu-fade{
+  will-change:opacity;
+  transform:translateZ(0);
+  backface-visibility:hidden;
+}
+
+/* =========================================================
+   VIRTUAL SCROLL CONTAINER — admin table
+   ========================================================= */
+.virtual-scroll{
+  overflow-y:auto;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  contain:layout style;
+}
+.virtual-scroll-inner{
+  position:relative;
+  width:100%;
+}
+.virtual-row{
+  contain:layout style;
+  will-change:transform;
+  transform:translateZ(0);
+}
+
+/* =========================================================
+   SMOOTH TRANSITIONS — GPU-optimized
+   ========================================================= */
+.smooth-transform{
+  transition:transform .25s cubic-bezier(.2,.8,.2,1);
+  will-change:transform;
+  transform:translateZ(0);
+}
+.smooth-opacity{
+  transition:opacity .3s ease;
+  will-change:opacity;
+}
+.smooth-all{
+  transition:transform .25s cubic-bezier(.2,.8,.2,1), opacity .3s ease, box-shadow .25s ease;
+  will-change:transform,opacity;
+  transform:translateZ(0);
+  backface-visibility:hidden;
+}
+
+/* =========================================================
    ACCE (India) — Warangal Centre
    Design tokens — premium blue identity
    ========================================================= */
@@ -101,6 +157,9 @@ p{margin:0 0 1em;color:#4A5568;}
   white-space:nowrap;
   overflow:hidden;
   isolation:isolate;
+  will-change:transform;
+  transform:translateZ(0);
+  backface-visibility:hidden;
 }
 .btn::before{
   content:'';
@@ -173,7 +232,7 @@ p{margin:0 0 1em;color:#4A5568;}
   padding-top:100px;
 }
 .hero-slideshow{position:absolute;inset:0;z-index:0;}
-.hero-slide{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.2s ease;}
+.hero-slide{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.2s ease;will-change:opacity;backface-visibility:hidden;}
 .hero-slide.active{opacity:1;}
 .hero-overlay{
   position:absolute;inset:0;z-index:1;
@@ -209,6 +268,8 @@ p{margin:0 0 1em;color:#4A5568;}
   background:var(--ink-soft);border:1px solid var(--line-dark);border-radius:var(--radius-md);
   padding:30px 24px;text-align:center;
   transition:transform .3s cubic-bezier(.2,.8,.2,1), border-color .3s ease, box-shadow .3s ease;
+  will-change:transform;
+  backface-visibility:hidden;
 }
 .member-card:hover{transform:translateY(-6px);border-color:var(--gold);box-shadow:0 20px 44px -16px rgba(68,132,209,.45);}
 .member-photo{width:100px;height:100px;border-radius:50%;overflow:hidden;margin:0 auto 18px;border:3px solid var(--gold);background:var(--ink);}
@@ -226,8 +287,8 @@ p{margin:0 0 1em;color:#4A5568;}
 
 /* ---------- Highlights ---------- */
 .highlight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--line);border:1px solid var(--line);}
-.highlight-card{background:var(--paper);padding:34px 30px;position:relative;overflow:hidden;transition:background .3s ease, transform .3s ease;}
-.highlight-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(var(--gold),var(--teal));transform:scaleY(0);transform-origin:bottom;transition:transform .35s cubic-bezier(.2,.8,.2,1);}
+.highlight-card{background:var(--paper);padding:34px 30px;position:relative;overflow:hidden;transition:background .3s ease, transform .3s ease;will-change:transform;backface-visibility:hidden;}
+.highlight-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(var(--gold),var(--teal));transform:scaleY(0);transform-origin:bottom;transition:transform .35s cubic-bezier(.2,.8,.2,1);will-change:transform;}
 .highlight-card:hover{background:var(--paper-dim);transform:translateY(-4px);}
 .highlight-card:hover::before{transform:scaleY(1);}
 .highlight-card .tag{font-family:var(--font-mono);font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:.08em;font-weight:600;}
@@ -255,7 +316,7 @@ p{margin:0 0 1em;color:#4A5568;}
 .footer-bottom{border-top:1px solid var(--line-dark);padding-top:24px;display:flex;justify-content:space-between;font-size:12px;flex-wrap:wrap;gap:10px;}
 
 /* ---------- Scroll reveal ---------- */
-.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease, transform .7s ease;}
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease, transform .7s ease;will-change:transform,opacity;backface-visibility:hidden;}
 .reveal.in{opacity:1;transform:translateY(0);}
 
 /* ---------- Hero poster ---------- */
@@ -520,4 +581,178 @@ p{margin:0 0 1em;color:#4A5568;}
 @media (max-width:420px){
   .idcard-actions{flex-direction:column !important;}
   .idcard-actions button,.idcard-actions a{width:100% !important;justify-content:center !important;}
+}
+
+/* =========================================================
+   GPU-ACCELERATED KEYFRAMES
+   ========================================================= */
+@keyframes gpuScan{
+  0%{transform:translate3d(0,-50%,0);}
+  100%{transform:translate3d(0,50%,0);}
+}
+@keyframes gpuFadeIn{
+  from{opacity:0;transform:translate3d(0,10px,0);}
+  to{opacity:1;transform:translate3d(0,0,0);}
+}
+@keyframes gpuScaleIn{
+  from{opacity:0;transform:translate3d(0,0,0) scale(0.9);}
+  to{opacity:1;transform:translate3d(0,0,0) scale(1);}
+}
+@keyframes gpuPulse{
+  0%,100%{opacity:1;}
+  50%{opacity:.7;}
+}
+
+/* =========================================================
+   PAGINATION CONTROLS
+   ========================================================= */
+.pagination{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:16px 0;
+}
+.pagination-btn{
+  padding:8px 14px;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--font-mono);
+  font-size:12px;
+  cursor:pointer;
+  transition:background .2s, border-color .2s, transform .15s;
+  will-change:transform;
+  transform:translateZ(0);
+  min-width:36px;
+  text-align:center;
+}
+.pagination-btn:hover{background:var(--paper-dim);border-color:var(--gold);transform:translateY(-1px);}
+.pagination-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.pagination-btn.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+.pagination-info{
+  font-family:var(--font-mono);
+  font-size:12px;
+  color:#5C7086;
+  padding:0 12px;
+}
+
+/* =========================================================
+   LOADING SKELETON — GPU accelerated
+   ========================================================= */
+@keyframes shimmer{
+  0%{transform:translate3d(-100%,0,0);}
+  100%{transform:translate3d(100%,0,0);}
+}
+.skeleton{
+  background:linear-gradient(90deg,#eee 25%,#e0e0e0 50%,#eee 75%);
+  background-size:200% 100%;
+  border-radius:4px;
+  overflow:hidden;
+  position:relative;
+}
+.skeleton::after{
+  content:'';
+  position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent);
+  animation:shimmer 1.5s infinite;
+  will-change:transform;
+  transform:translateZ(0);
+}
+
+/* =========================================================
+   MOBILE FIRST — Universal touch & safe-area helpers
+   ========================================================= */
+@supports(padding:max(0px)){
+  .site-header{padding-top:max(0px,env(safe-area-inset-top));}
+  .site-footer{padding-bottom:max(30px,env(safe-area-inset-bottom));}
+  body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);}
+}
+
+/* Prevent iOS text size inflation */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+
+/* Ensure all interactive elements meet 48px minimum tap target */
+.action-btn{min-height:44px;min-width:44px;}
+.pagination-btn{min-height:44px;}
+.reg-input{min-height:48px;}
+.sponsor-form-grid input,.sponsor-form-grid textarea{min-height:48px;}
+
+/* =========================================================
+   INNER PAGE BANNERS — Mobile padding
+   ========================================================= */
+@media (max-width:900px){
+  .section{padding:60px 0;}
+}
+@media (max-width:600px){
+  .section{padding:40px 0;}
+  .section-head{margin-bottom:28px;}
+  .section-head h2{font-size:clamp(24px,5vw,32px);}
+}
+
+/* =========================================================
+   SPONSORSHIP FORM — Stack grid on mobile
+   ========================================================= */
+@media (max-width:640px){
+  .sponsor-form-grid{grid-template-columns:1fr !important;gap:16px !important;}
+}
+
+/* =========================================================
+   VERIFY PAGE — Stack lookup on mobile
+   ========================================================= */
+@media (max-width:500px){
+  .verify-lookup{flex-direction:column !important;}
+  .verify-lookup .btn{width:100%;justify-content:center;}
+}
+
+/* =========================================================
+   FORM INPUTS — Prevent zoom on focus (iOS)
+   ========================================================= */
+@media (max-width:768px){
+  input[type="text"],input[type="email"],input[type="tel"],input[type="password"],input[type="number"],input[type="date"],input[type="url"],textarea,select{
+    font-size:16px !important;
+  }
+}
+
+/* =========================================================
+   SMOOTH SCROLL — Only on desktop
+   ========================================================= */
+@media (max-width:768px){
+  html{scroll-behavior:auto;}
+}
+
+/* =========================================================
+   HERO — Better mobile viewport
+   ========================================================= */
+@media (max-width:480px){
+  .hero{min-height:100vh;min-height:100dvh;}
+  .hero-content{padding:0 16px 32px;}
+  .hero-stat{padding:12px 16px;}
+  .hero-stat-number{font-size:28px;}
+  .hero-stat-label{font-size:10px;}
+}
+
+/* =========================================================
+   TABLES — Horizontal scroll hint
+   ========================================================= */
+@media (max-width:768px){
+  .admin-table-wrap{position:relative;}
+  .admin-table-wrap::after{
+    content:'Swipe to see more →';
+    display:block;
+    text-align:center;
+    padding:8px;
+    font-family:var(--font-mono);
+    font-size:10px;
+    color:#8A8E96;
+    letter-spacing:0.05em;
+  }
+}
+
+/* =========================================================
+   MODAL — Full-width on very small screens
+   ========================================================= */
+@media (max-width:480px){
+  .admin-modal-box{max-height:90vh !important;border-radius:12px !important;}
 }

@@ -96,14 +96,14 @@ export default function RegistrationPage() {
         <div className="reg-popup" style={styles.popup}>
           <div style={{ width: '100%', overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
             <div style={{ display: 'flex', width: '100%' }}>
-              <Image src="/img/1.jpeg" alt="Partner" width={200} height={60} style={{ width: '50%', height: 60, objectFit: 'cover' }} />
+              <Image src="/img/logo.png" alt="Partner" width={200} height={60} style={{ width: '50%', height: 60, objectFit: 'cover' }} />
               <Image src="/img/2.jpeg" alt="Partner" width={200} height={60} style={{ width: '50%', height: 60, objectFit: 'cover' }} />
             </div>
           </div>
 
           <div style={{ background: 'linear-gradient(135deg, #0A2647, #1D4E86)', padding: '14px 20px', textAlign: 'center', width: '100%' }}>
             <h3 style={{ color: '#fff', fontSize: 13, letterSpacing: '0.06em', textTransform: 'uppercase' as const, fontFamily: 'var(--font-mono)', margin: 0 }}>
-              ACCE · Build Expo 2026
+              Build Expo 2026
             </h3>
           </div>
 
@@ -169,7 +169,7 @@ export default function RegistrationPage() {
       <div className="reg-banner" style={styles.headerBanner}>
         <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 28px', position: 'relative', zIndex: 1 }}>
           <span style={styles.eyebrow}>Registration</span>
-          <h1 style={styles.bannerTitle}>ACCE(I) Build Expo 2026</h1>
+          <h1 style={styles.bannerTitle}>Build Expo 2026</h1>
           <p style={{ color: '#B8CCE4', fontSize: 15, margin: 0 }}>Complete the form below to secure your delegate pass</p>
         </div>
       </div>
@@ -293,12 +293,13 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '12px 14px',
     border: '1px solid var(--line)',
     borderRadius: 10,
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'var(--font-body)',
     background: '#fff',
     outline: 'none',
     transition: 'border-color 0.2s, box-shadow 0.2s',
     boxSizing: 'border-box' as const,
+    minHeight: 48,
   },
   btn: {
     padding: '14px 28px',

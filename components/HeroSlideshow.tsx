@@ -20,7 +20,7 @@ export default function HeroSlideshow() {
   }, []);
 
   return (
-    <div className="hero-slideshow">
+    <div className="hero-slideshow" style={{ contain: 'layout style' }}>
       {SLIDES.map((src, i) => (
         <Image
           key={src}
@@ -30,6 +30,7 @@ export default function HeroSlideshow() {
           sizes="100vw"
           priority={i === 0}
           className={`hero-slide${i === active ? ' active' : ''}`}
+          style={{ willChange: 'opacity', backfaceVisibility: 'hidden' }}
         />
       ))}
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -15,6 +15,7 @@ import {
   checkIn,
   toCSV,
   downloadCSV,
+  debounce,
   type Registration,
   type Sponsorship,
 } from '@/lib/nexus-store';
@@ -23,6 +24,8 @@ import { useToast } from '@/lib/toast';
 type Tab = 'registrations' | 'sponsorships' | 'checkin';
 type RegModalMode = 'view' | 'edit' | null;
 
+const PAGE_SIZE = 50;
+
 export default function AdminDashboardPage() {
   const router = useRouter();
   const { showToast } = useToast();
@@ -30,11 +33,15 @@ export default function AdminDashboardPage() {
   const [tab, setTab] = useState<Tab>('registrations');
 
   const [regs, setRegs] = useState<Registration[]>([]);
+  const [regTotal, setRegTotal] = useState(0);
+  const [regPage, setRegPage] = useState(1);
   const [regSearch, setRegSearch] = useState('');
   const [filterDate, setFilterDate] = useState('');
   const [regModal, setRegModal] = useState<{ mode: RegModalMode; record: Registration | null }>({ mode: null, record: null });
 
   const [sponsors, setSponsors] = useState<Sponsorship[]>([]);
+  const [spnTotal, setSpnTotal] = useState(0);
+  const [spnPage, setSpnPage] = useState(1);
   const [spnSearch, setSpnSearch] = useState('');
   const [spnModal, setSpnModal] = useState<Sponsorship | null>(null);
 
@@ -42,96 +49,133 @@ export default function AdminDashboardPage() {
   const [recentCheckins, setRecentCheckins] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const refreshRegs = useCallback(async () => {
+  const regsRef = useRef<Registration[]>([]);
+
+  const refreshRegs = useCallback(async (page?: number, search?: string, date?: string) => {
     try {
-      const data = await getRegistrations({ search: regSearch, date: filterDate });
-      setRegs(data);
-    } catch {
+      const result = await getRegistrations({
+        page: page || regPage,
+        limit: PAGE_SIZE,
+        search: search !== undefined ? search : regSearch,
+        date: date !== undefined ? date : filterDate,
+      });
+      setRegs(result.items);
+      regsRef.current = result.items;
+      setRegTotal(result.total);
+      setRegPage(result.page);
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
       showToast('Failed to load registrations', 'error');
     }
-  }, [regSearch, filterDate, showToast]);
+  }, [regPage, regSearch, filterDate, showToast]);
 
-  const refreshSpns = useCallback(async () => {
+  const refreshSpns = useCallback(async (page?: number, search?: string) => {
     try {
-      const data = await getSponsorships({ search: spnSearch });
-      setSponsors(data);
-    } catch {
+      const result = await getSponsorships({
+        page: page || spnPage,
+        limit: PAGE_SIZE,
+        search: search !== undefined ? search : spnSearch,
+      });
+      setSponsors(result.items);
+      setSpnTotal(result.total);
+      setSpnPage(result.page);
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
       showToast('Failed to load sponsorships', 'error');
     }
-  }, [spnSearch, showToast]);
+  }, [spnPage, spnSearch, showToast]);
 
   const refreshCheckins = useCallback(async () => {
     try {
-      const data = await getRegistrations();
-      setRecentCheckins(
-        data
-          .filter((r) => r.checkedIn)
-          .sort((a, b) => new Date(b.checkedInAt!).getTime() - new Date(a.checkedInAt!).getTime())
-          .slice(0, 8)
-      );
+      const sp = new URLSearchParams();
+      sp.set('limit', '20');
+      sp.set('checkedIn', 'true');
+      const res = await fetch(`/api/registrations?${sp}`, { cache: 'no-store' });
+      if (!res.ok) return;
+      const data = await res.json();
+      const items = (data.registrations || []).map((r: Record<string, unknown>) => ({
+        regId: r.reg_id,
+        fullName: r.full_name,
+        photo: r.photo_url || '',
+        mobile: r.mobile,
+        email: r.email,
+        category: r.category || '',
+        city: r.city || '',
+        state: r.state || '',
+        country: r.country || 'India',
+        pin: r.pin || '',
+        isACCEMember: r.is_acce_member,
+        checkedIn: r.checked_in,
+        checkedInAt: r.checked_in_at || null,
+        createdAt: r.created_at,
+      }));
+      setRecentCheckins(items);
     } catch { /* ignore */ }
   }, []);
 
   useEffect(() => {
     (async () => {
       try {
-        await Promise.all([refreshRegs(), refreshSpns(), refreshCheckins()]);
+        await Promise.allSettled([refreshRegs(), refreshSpns(), refreshCheckins()]);
       } finally {
         setLoading(false);
       }
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Re-fetch when search/filter changes (skip initial mount handled above)
-  const [initialized, setInitialized] = useState(false);
+  const debouncedRegSearchRef = useRef<((val: string) => void) & { cancel: () => void } | null>(null);
+  const debouncedSpnSearchRef = useRef<((val: string) => void) & { cancel: () => void } | null>(null);
+
+  // Initialize debounced functions once
   useEffect(() => {
-    if (!initialized) { setInitialized(true); return; }
-    refreshRegs();
-  }, [refreshRegs, initialized]);
+    debouncedRegSearchRef.current = debounce((val: string) => {
+      setRegPage(1);
+      getRegistrations({ page: 1, limit: PAGE_SIZE, search: val, date: filterDate }).then((result) => {
+        setRegs(result.items);
+        regsRef.current = result.items;
+        setRegTotal(result.total);
+      }).catch(() => {});
+    }, 400);
 
-  useEffect(() => {
-    if (!initialized) return;
-    refreshSpns();
-  }, [refreshSpns, initialized]);
+    debouncedSpnSearchRef.current = debounce((val: string) => {
+      setSpnPage(1);
+      getSponsorships({ page: 1, limit: PAGE_SIZE, search: val }).then((result) => {
+        setSponsors(result.items);
+        setSpnTotal(result.total);
+      }).catch(() => {});
+    }, 400);
 
-  const filteredRegs = useMemo(() => {
-    const q = regSearch.trim().toLowerCase();
-    return regs
-      .filter((r) => {
-        if (q) {
-          const hay = `${r.fullName} ${r.regId} ${r.mobile} ${r.email}`.toLowerCase();
-          if (!hay.includes(q)) return false;
-        }
-        return true;
-      })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [regs, regSearch]);
+    return () => {
+      debouncedRegSearchRef.current?.cancel();
+      debouncedSpnSearchRef.current?.cancel();
+    };
+  }, [filterDate]);
 
-  const filteredSpns = useMemo(() => {
-    const q = spnSearch.trim().toLowerCase();
-    return sponsors
-      .filter((s) => {
-        if (q) {
-          const hay = `${s.companyName} ${s.sponsorId} ${s.contactPerson}`.toLowerCase();
-          if (!hay.includes(q)) return false;
-        }
-        return true;
-      })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [sponsors, spnSearch]);
+  const handleRegSearchChange = useCallback((val: string) => {
+    setRegSearch(val);
+    debouncedRegSearchRef.current?.(val);
+  }, []);
 
-  const isToday = (iso: string) => new Date(iso).toDateString() === new Date().toDateString();
+  const handleSpnSearchChange = useCallback((val: string) => {
+    setSpnSearch(val);
+    debouncedSpnSearchRef.current?.(val);
+  }, []);
+
+  const handleDateChange = useCallback((val: string) => {
+    setFilterDate(val);
+    setRegPage(1);
+    refreshRegs(1, regSearch, val);
+  }, [refreshRegs, regSearch]);
 
   const regStats = useMemo(() => [
-    { label: 'Total Registrations', value: regs.length, cls: '' },
-    { label: "Today's", value: regs.filter((r) => isToday(r.createdAt)).length, cls: 'accent' },
-    { label: 'Total Sponsors', value: sponsors.length, cls: 'accent' },
-  ], [regs, sponsors]);
+    { label: 'Total Registrations', value: regTotal, cls: '' },
+    { label: 'Loaded', value: regs.length, cls: 'accent' },
+    { label: 'Total Sponsors', value: spnTotal, cls: 'accent' },
+  ], [regTotal, regs.length, spnTotal]);
 
   const spnStats = useMemo(() => [
-    { label: 'Total Sponsorships', value: sponsors.length, cls: '' },
-    { label: "Today's", value: sponsors.filter((s) => isToday(s.createdAt)).length, cls: 'accent' },
-  ], [sponsors]);
+    { label: 'Total Sponsorships', value: spnTotal, cls: '' },
+  ], [spnTotal]);
 
   const handleLogout = async () => {
     try {
@@ -143,49 +187,34 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const toggleCheckIn = async (r: Registration) => {
-    if (r.checkedIn) {
-      showToast(`${r.fullName} is already checked in. Undo is disabled.`, 'error');
-      return;
-    }
+  const handleExportRegs = async () => {
     try {
-      await checkIn(r.regId);
-      showToast(`${r.fullName} checked in.`, 'success');
-      await Promise.all([refreshRegs(), refreshCheckins()]);
+      const result = await getRegistrations({ limit: 2000, search: regSearch, date: filterDate });
+      if (!result.items.length) { showToast('Nothing to export.', 'error'); return; }
+      const columns = [
+        'regId', 'fullName', 'mobile', 'email', 'city', 'state', 'country',
+        'isACCEMember', 'checkedIn', 'createdAt',
+      ];
+      downloadCSV('acce-registrations.csv', toCSV(result.items as unknown as Record<string, unknown>[], columns));
+      showToast('CSV exported.', 'success');
     } catch {
-      showToast('Check-in failed.', 'error');
+      showToast('Export failed.', 'error');
     }
   };
 
-  const handleDeleteReg = async (r: Registration) => {
-    if (!confirm(`Delete registration ${r.regId}? This cannot be undone.`)) return;
+  const handleExportSpns = async () => {
     try {
-      await deleteRegistration(r.regId);
-      showToast(`${r.regId} deleted.`, 'success');
-      await Promise.all([refreshRegs(), refreshCheckins()]);
+      const result = await getSponsorships({ limit: 2000, search: spnSearch });
+      if (!result.items.length) { showToast('Nothing to export.', 'error'); return; }
+      const columns = [
+        'sponsorId', 'companyName', 'contactPerson', 'phone', 'email',
+        'website', 'gst', 'createdAt',
+      ];
+      downloadCSV('acce-sponsorships.csv', toCSV(result.items as unknown as Record<string, unknown>[], columns));
+      showToast('CSV exported.', 'success');
     } catch {
-      showToast('Delete failed.', 'error');
+      showToast('Export failed.', 'error');
     }
-  };
-
-  const handleExportRegs = () => {
-    if (!filteredRegs.length) { showToast('Nothing to export.', 'error'); return; }
-    const columns = [
-      'regId', 'fullName', 'mobile', 'email', 'city', 'state', 'country',
-      'isACCEMember', 'checkedIn', 'createdAt',
-    ];
-    downloadCSV('acce-registrations.csv', toCSV(filteredRegs as unknown as Record<string, unknown>[], columns));
-    showToast('CSV exported.', 'success');
-  };
-
-  const handleExportSpns = () => {
-    if (!filteredSpns.length) { showToast('Nothing to export.', 'error'); return; }
-    const columns = [
-      'sponsorId', 'companyName', 'contactPerson', 'phone', 'email',
-      'website', 'gst', 'createdAt',
-    ];
-    downloadCSV('acce-sponsorships.csv', toCSV(filteredSpns as unknown as Record<string, unknown>[], columns));
-    showToast('CSV exported.', 'success');
   };
 
   const handleManualCheckin = async () => {
@@ -198,7 +227,7 @@ export default function AdminDashboardPage() {
       await checkIn(v);
       showToast(`${rec.fullName} checked in.`, 'success');
       setManualId('');
-      await Promise.all([refreshRegs(), refreshCheckins()]);
+      await Promise.allSettled([refreshRegs(), refreshCheckins()]);
     } catch {
       showToast('Check-in failed.', 'error');
     }
@@ -243,7 +272,7 @@ export default function AdminDashboardPage() {
       await deleteRegistration(regId);
       showToast(`${regId} deleted.`, 'success');
       closeRegModal();
-      await Promise.all([refreshRegs(), refreshCheckins()]);
+      await Promise.allSettled([refreshRegs(), refreshCheckins()]);
     } catch {
       showToast('Delete failed.', 'error');
     }
@@ -261,24 +290,27 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const regTotalPages = Math.ceil(regTotal / PAGE_SIZE);
+  const spnTotalPages = Math.ceil(spnTotal / PAGE_SIZE);
+
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontFamily: 'var(--font-body)' }}>
-        <span style={{ color: '#8A8E96', fontSize: 14 }}>Loading dashboard…</span>
+        <span style={{ color: '#8A8E96', fontSize: 14 }}>Loading dashboard...</span>
       </div>
     );
   }
 
   return (
     <>
-      {/* ── Top Bar ── */}
-      <div style={styles.topBar} className="admin-topbar-wrap">
+      {/* -- Top Bar -- */}
+      <div style={styles.topBar} className="admin-topbar-wrap gpu-layer">
         <div style={styles.topBarLeft}>
           <span style={styles.brandMark}>
             <Image src="/img/logo.png" alt="ACCE" width={34} height={34} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </span>
           <span style={styles.topBarBrand}>ACCE (India)</span>
-          <Link href="/" style={styles.viewSiteLink}>← View Site</Link>
+          <Link href="/" style={styles.viewSiteLink}>&larr; View Site</Link>
         </div>
         <div style={styles.topBarRight}>
           <div style={styles.topBarNav} className="admin-topbar-nav">
@@ -310,14 +342,14 @@ export default function AdminDashboardPage() {
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#5A6270' }}>Signed in as admin</span>
           </div>
 
-          {/* ── REGISTRATIONS TAB ── */}
+          {/* -- REGISTRATIONS TAB -- */}
           {tab === 'registrations' && (
             <div>
               <div style={styles.statsRow} className="admin-stats-row">
                 {regStats.map((s, i) => (
                   <div key={i} style={styles.statCard} className={`stat-card ${s.cls}`}>
                     <span>{s.label}</span>
-                    <strong>{s.value}</strong>
+                    <strong>{s.value.toLocaleString()}</strong>
                   </div>
                 ))}
               </div>
@@ -326,12 +358,12 @@ export default function AdminDashboardPage() {
                 <div style={styles.filters} className="admin-toolbar-filters">
                   <input
                     type="text"
-                    placeholder="Search name, ID, phone, email…"
+                    placeholder="Search name, ID, phone, email..."
                     value={regSearch}
-                    onChange={(e) => setRegSearch(e.target.value)}
+                    onChange={(e) => handleRegSearchChange(e.target.value)}
                     style={styles.toolbarInput}
                   />
-                  <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} style={styles.toolbarInput} />
+                  <input type="date" value={filterDate} onChange={(e) => handleDateChange(e.target.value)} style={styles.toolbarInput} />
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button className="btn btn-dark" onClick={handleExportRegs} style={{ minHeight: 40 }}>Export CSV</button>
@@ -349,27 +381,27 @@ export default function AdminDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredRegs.length === 0 ? (
+                    {regs.length === 0 ? (
                       <tr><td colSpan={9} style={{ textAlign: 'center', color: '#8A8E96', padding: 40 }}>No registrations match your search.</td></tr>
-                    ) : filteredRegs.map((r) => (
-                      <tr key={r.regId} style={styles.tr}>
+                    ) : regs.map((r) => (
+                      <tr key={r.regId} style={styles.tr} className="virtual-row">
                         <td style={styles.td}>{r.regId}</td>
                         <td style={styles.td}>{r.fullName}</td>
                         <td style={styles.td}>{r.mobile}</td>
                         <td style={styles.td}>{r.email}</td>
-                        <td style={styles.td}>{r.category || '—'}</td>
+                        <td style={styles.td}>{r.category || '---'}</td>
                         <td style={styles.td}>{r.isACCEMember ? <span style={{ color: 'var(--teal)', fontWeight: 600 }}>Yes</span> : 'No'}</td>
                         <td style={styles.td}>{new Date(r.createdAt).toLocaleDateString()}</td>
                         <td style={styles.td}>
                           {r.checkedIn
                             ? <span className="checkin-yes">YES</span>
-                            : <span className="checkin-no">—</span>
+                            : <span className="checkin-no">---</span>
                           }
                         </td>
                         <td style={styles.td}>
                           <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
                             <button className="action-btn" onClick={() => openRegModal('view', r)}>View</button>
-                            <Link className="action-btn" href={`/id-card?regId=${r.regId}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>Screenshot ID Card</Link>
+                            <Link className="action-btn" href={`/id-card?regId=${r.regId}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>ID Card</Link>
                           </div>
                         </td>
                       </tr>
@@ -377,17 +409,53 @@ export default function AdminDashboardPage() {
                   </tbody>
                 </table>
               </div>
+
+              {regTotalPages > 1 && (
+                <div className="pagination">
+                  <button
+                    className="pagination-btn"
+                    disabled={regPage <= 1}
+                    onClick={() => { setRegPage(1); refreshRegs(1); }}
+                  >
+                    &laquo;
+                  </button>
+                  <button
+                    className="pagination-btn"
+                    disabled={regPage <= 1}
+                    onClick={() => { setRegPage(regPage - 1); refreshRegs(regPage - 1); }}
+                  >
+                    &lsaquo;
+                  </button>
+                  <span className="pagination-info">
+                    Page {regPage} of {regTotalPages} ({regTotal.toLocaleString()} total)
+                  </span>
+                  <button
+                    className="pagination-btn"
+                    disabled={regPage >= regTotalPages}
+                    onClick={() => { setRegPage(regPage + 1); refreshRegs(regPage + 1); }}
+                  >
+                    &rsaquo;
+                  </button>
+                  <button
+                    className="pagination-btn"
+                    disabled={regPage >= regTotalPages}
+                    onClick={() => { setRegPage(regTotalPages); refreshRegs(regTotalPages); }}
+                  >
+                    &raquo;
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
-          {/* ── SPONSORSHIPS TAB ── */}
+          {/* -- SPONSORSHIPS TAB -- */}
           {tab === 'sponsorships' && (
             <div>
               <div style={styles.statsRow} className="admin-stats-row">
                 {spnStats.map((s, i) => (
                   <div key={i} style={styles.statCard} className={`stat-card ${s.cls}`}>
                     <span>{s.label}</span>
-                    <strong>{s.value}</strong>
+                    <strong>{s.value.toLocaleString()}</strong>
                   </div>
                 ))}
               </div>
@@ -396,9 +464,9 @@ export default function AdminDashboardPage() {
                 <div style={styles.filters} className="admin-toolbar-filters">
                   <input
                     type="text"
-                    placeholder="Search company, sponsor ID, contact…"
+                    placeholder="Search company, sponsor ID, contact..."
                     value={spnSearch}
-                    onChange={(e) => setSpnSearch(e.target.value)}
+                    onChange={(e) => handleSpnSearchChange(e.target.value)}
                     style={styles.toolbarInput}
                   />
                 </div>
@@ -418,10 +486,10 @@ export default function AdminDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredSpns.length === 0 ? (
+                    {sponsors.length === 0 ? (
                       <tr><td colSpan={6} style={{ textAlign: 'center', color: '#8A8E96', padding: 40 }}>No sponsorship applications match your search.</td></tr>
-                    ) : filteredSpns.map((s) => (
-                      <tr key={s.sponsorId} style={styles.tr}>
+                    ) : sponsors.map((s) => (
+                      <tr key={s.sponsorId} style={styles.tr} className="virtual-row">
                         <td style={styles.td}>{s.sponsorId}</td>
                         <td style={styles.td}>{s.companyName}</td>
                         <td style={styles.td}>{s.contactPerson}</td>
@@ -436,14 +504,52 @@ export default function AdminDashboardPage() {
                   </tbody>
                 </table>
               </div>
+
+              {spnTotalPages > 1 && (
+                <div className="pagination">
+                  <button
+                    className="pagination-btn"
+                    disabled={spnPage <= 1}
+                    onClick={() => { setSpnPage(1); refreshSpns(1); }}
+                  >
+                    &laquo;
+                  </button>
+                  <button
+                    className="pagination-btn"
+                    disabled={spnPage <= 1}
+                    onClick={() => { setSpnPage(spnPage - 1); refreshSpns(spnPage - 1); }}
+                  >
+                    &lsaquo;
+                  </button>
+                  <span className="pagination-info">
+                    Page {spnPage} of {spnTotalPages} ({spnTotal.toLocaleString()} total)
+                  </span>
+                  <button
+                    className="pagination-btn"
+                    disabled={spnPage >= spnTotalPages}
+                    onClick={() => { setSpnPage(spnPage + 1); refreshSpns(spnPage + 1); }}
+                  >
+                    &rsaquo;
+                  </button>
+                  <button
+                    className="pagination-btn"
+                    disabled={spnPage >= spnTotalPages}
+                    onClick={() => { setSpnPage(spnTotalPages); refreshSpns(spnTotalPages); }}
+                  >
+                    &raquo;
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
-          {/* ── CHECK-IN TAB ── */}
+          {/* -- CHECK-IN TAB -- */}
           {tab === 'checkin' && (
             <div>
               <div style={{ marginBottom: 24 }}>
-                <BadgeScanner onCheckInSuccess={() => { refreshRegs(); refreshCheckins(); }} />
+                <BadgeScanner onCheckInSuccess={() => {
+                  Promise.allSettled([refreshRegs(), refreshCheckins()]);
+                }} />
               </div>
 
               <div style={styles.manualCard}>
@@ -480,15 +586,15 @@ export default function AdminDashboardPage() {
           )}
       </div>
 
-      {/* ── Registration View Modal ── */}
+      {/* -- Registration View Modal -- */}
       {regModal.mode === 'view' && regModal.record && (
-        <div style={styles.modalOverlay} className="admin-modal-wrap" onClick={(e) => { if (e.target === e.currentTarget) closeRegModal(); }}>
-          <div style={styles.modalBox} className="admin-modal-box">
-            <button onClick={closeRegModal} style={styles.modalClose}>×</button>
+        <div style={styles.modalOverlay} className="admin-modal-wrap gpu-fade" onClick={(e) => { if (e.target === e.currentTarget) closeRegModal(); }}>
+          <div style={styles.modalBox} className="admin-modal-box gpu-layer">
+            <button onClick={closeRegModal} style={styles.modalClose}>&times;</button>
             {regModal.record.photo && <img src={regModal.record.photo} alt="" style={styles.modalPhoto} />}
             <h3 style={{ fontSize: 20, marginBottom: 14 }}>{regModal.record.fullName}</h3>
             <ModalRow label="Reg. ID" value={regModal.record.regId} />
-            <ModalRow label="Category" value={regModal.record.category || '—'} />
+            <ModalRow label="Category" value={regModal.record.category || '---'} />
             <ModalRow label="Check-In" value={regModal.record.checkedIn ? `Checked in${regModal.record.checkedInAt ? ' · ' + new Date(regModal.record.checkedInAt).toLocaleString() : ''}` : 'Not checked in'} />
             <ModalRow label="Mobile" value={regModal.record.mobile} />
             <ModalRow label="Email" value={regModal.record.email} />
@@ -505,11 +611,11 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* ── Registration Edit Modal ── */}
+      {/* -- Registration Edit Modal -- */}
       {regModal.mode === 'edit' && regModal.record && (
-        <div style={styles.modalOverlay} className="admin-modal-wrap" onClick={(e) => { if (e.target === e.currentTarget) closeRegModal(); }}>
-          <div style={styles.modalBox} className="admin-modal-box">
-            <button onClick={closeRegModal} style={styles.modalClose}>×</button>
+        <div style={styles.modalOverlay} className="admin-modal-wrap gpu-fade" onClick={(e) => { if (e.target === e.currentTarget) closeRegModal(); }}>
+          <div style={styles.modalBox} className="admin-modal-box gpu-layer">
+            <button onClick={closeRegModal} style={styles.modalClose}>&times;</button>
             <h3 style={{ fontSize: 20, marginBottom: 18 }}>Edit {regModal.record.regId}</h3>
             <div style={styles.field}><label style={styles.label}>Full Name</label><input type="text" value={editFields.fullName} onChange={(e) => setEditFields({ ...editFields, fullName: e.target.value })} style={styles.input} /></div>
             <div style={styles.field}><label style={styles.label}>Mobile</label><input type="text" value={editFields.mobile} maxLength={10} onChange={(e) => setEditFields({ ...editFields, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) })} style={styles.input} /></div>
@@ -522,21 +628,21 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* ── Sponsorship View Modal ── */}
+      {/* -- Sponsorship View Modal -- */}
       {spnModal && (
-        <div style={styles.modalOverlay} className="admin-modal-wrap" onClick={(e) => { if (e.target === e.currentTarget) setSpnModal(null); }}>
-          <div style={styles.modalBox} className="admin-modal-box">
-            <button onClick={() => setSpnModal(null)} style={styles.modalClose}>×</button>
+        <div style={styles.modalOverlay} className="admin-modal-wrap gpu-fade" onClick={(e) => { if (e.target === e.currentTarget) setSpnModal(null); }}>
+          <div style={styles.modalBox} className="admin-modal-box gpu-layer">
+            <button onClick={() => setSpnModal(null)} style={styles.modalClose}>&times;</button>
             {spnModal.logo && <img src={spnModal.logo} alt="" style={{ ...styles.modalPhoto, borderRadius: 8 }} />}
             <h3 style={{ fontSize: 20, marginBottom: 14 }}>{spnModal.companyName}</h3>
             <ModalRow label="Sponsor ID" value={spnModal.sponsorId} />
             <ModalRow label="Contact" value={spnModal.contactPerson} />
             <ModalRow label="Phone" value={spnModal.phone} />
             <ModalRow label="Email" value={spnModal.email} />
-            <ModalRow label="Website" value={spnModal.website || '—'} />
-            <ModalRow label="Address" value={spnModal.address || '—'} />
-            <ModalRow label="GST" value={spnModal.gst || '—'} />
-            <ModalRow label="Requirements" value={spnModal.requirements || '—'} />
+            <ModalRow label="Website" value={spnModal.website || '---'} />
+            <ModalRow label="Address" value={spnModal.address || '---'} />
+            <ModalRow label="GST" value={spnModal.gst || '---'} />
+            <ModalRow label="Requirements" value={spnModal.requirements || '---'} />
             <div style={styles.modalActions} className="admin-modal-actions">
               <button className="btn btn-dark" onClick={() => setSpnModal(null)}>Close</button>
             </div>
@@ -608,6 +714,8 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     minHeight: 40,
     transition: 'background 0.2s, color 0.2s',
+    willChange: 'transform',
+    transform: 'translateZ(0)',
   },
   brandMark: {
     width: 34,
@@ -681,14 +789,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'var(--font-body)',
     minWidth: 220,
   },
-  toolbarSelect: {
-    padding: '10px 12px',
-    border: '1px solid var(--line)',
-    borderRadius: 3,
-    fontSize: 13,
-    background: '#fff',
-    fontFamily: 'var(--font-body)',
-  },
   tableWrap: {
     background: '#fff',
     border: '1px solid var(--line)',
@@ -711,6 +811,9 @@ const styles: Record<string, React.CSSProperties> = {
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
     whiteSpace: 'nowrap',
+    position: 'sticky',
+    top: 0,
+    zIndex: 1,
   },
   tr: {},
   td: {
@@ -718,21 +821,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderBottom: '1px solid var(--line)',
     verticalAlign: 'middle',
     whiteSpace: 'nowrap',
-  },
-  tablePhoto: {
-    width: 34,
-    height: 34,
-    borderRadius: '50%',
-    objectFit: 'cover',
-    background: '#eee',
-  },
-  screenshotThumb: {
-    width: 40,
-    height: 30,
-    borderRadius: 4,
-    objectFit: 'cover',
-    cursor: 'pointer',
-    border: '1px solid var(--line)',
   },
   recentCard: {
     background: '#fff',

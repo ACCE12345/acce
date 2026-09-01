@@ -101,27 +101,27 @@ export default function DownloadIdCard({ variant = 'light' }: { variant?: 'light
         {record && (
           <div style={{ marginTop: 24 }}>
             <div ref={cardRef} style={{
-              width: 380, maxWidth: '100%', background: '#fff', borderRadius: 16,
+              width: 400, maxWidth: '100%', background: '#fff', borderRadius: 16,
               overflow: 'hidden', boxShadow: '0 20px 60px -16px rgba(10,38,71,0.35)', margin: '0 auto',
             }}>
               {/* Card header */}
               <div style={{
                 background: 'linear-gradient(135deg, #0A2647, #1D4E86)', color: '#fff',
-                padding: '16px 26px 20px', textAlign: 'center',
+                padding: '20px 28px 24px', textAlign: 'center',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, marginBottom: 8 }}>
-                  <Image src="/img/1.jpeg" alt="Partner" width={50} height={30} style={{ height: 30, width: 'auto', objectFit: 'contain' }} />
-                  <Image src="/img/2.jpeg" alt="Partner" width={50} height={30} style={{ height: 30, width: 'auto', objectFit: 'contain' }} />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, marginBottom: 10 }}>
+                  <Image src="/img/logo.png" alt="ACCE" width={60} height={44} style={{ height: 44, width: 'auto', objectFit: 'contain' }} />
+                  <Image src="/img/2.jpeg" alt="Partner" width={60} height={44} style={{ height: 44, width: 'auto', objectFit: 'contain' }} />
                 </div>
-                <h3 style={{ color: '#fff', fontSize: 15, letterSpacing: '0.06em', textTransform: 'uppercase' as const, fontFamily: 'var(--font-mono)', margin: 0 }}>
-                  ACCE · Build Expo 2026
+                <h3 style={{ color: '#fff', fontSize: 20, letterSpacing: '0.08em', textTransform: 'uppercase' as const, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, margin: 0 }}>
+                  Build Expo 2026
                 </h3>
               </div>
 
               {/* Card body */}
               <div style={{ padding: '12px 28px 10px', textAlign: 'center' }}>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: 23, marginBottom: 4, fontWeight: 700 }}>{record.fullName}</div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5, color: '#2E63A8', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>
+                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 23, marginBottom: 4, fontWeight: 700, color: '#0A2647' }}>{record.fullName}</div>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: '#2E63A8', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>
                   {record.category || 'Delegate'}
                 </div>
 
@@ -146,7 +146,7 @@ export default function DownloadIdCard({ variant = 'light' }: { variant?: 'light
                     ['Phone', `+91 ${record.mobile}`],
                   ].map(([label, value]) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, padding: '6px 0' }}>
-                      <span style={{ color: '#8A8E96', fontFamily: 'var(--font-mono)', textTransform: 'uppercase' as const, fontSize: 10.5, letterSpacing: '0.05em' }}>{label}</span>
+                      <span style={{ color: '#8A8E96', fontFamily: "'IBM Plex Mono', monospace", textTransform: 'uppercase' as const, fontSize: 10.5, letterSpacing: '0.05em' }}>{label}</span>
                       <span style={{ fontWeight: 600, textAlign: 'right' }}>{value}</span>
                     </div>
                   ))}
@@ -162,20 +162,20 @@ export default function DownloadIdCard({ variant = 'light' }: { variant?: 'light
                   }}>
                     <QrCode text={record.regId} size={110} />
                   </div>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A8E96' }}>Scan to verify</span>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A8E96' }}>Scan to verify</span>
                 </div>
               </div>
 
               {/* Card footer */}
               <div style={{ textAlign: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontSize: 10, color: '#8A8E96', fontFamily: 'var(--font-mono)', padding: '10px 0 6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontSize: 13, color: '#5A6270', fontFamily: "'IBM Plex Mono', monospace", fontWeight: 500, padding: '12px 0 6px' }}>
                   Powered by
-                  <img src="/img/a+.png" alt="A+ Tech Services" style={{ height: 14, width: 'auto', verticalAlign: 'middle', marginLeft: 4 }} />
+                  <img src="/img/a+.png" alt="A+ Tech Services" style={{ height: 18, width: 'auto', verticalAlign: 'middle', marginLeft: 4 }} />
                   A+ Tech Services
                 </div>
                 <div style={{
                   background: 'linear-gradient(135deg, #2E63A8, #4484D1)', color: '#fff', textAlign: 'center',
-                  padding: 10, fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' as const,
+                  padding: 12, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' as const,
                 }}>
                   Registered Participant
                 </div>

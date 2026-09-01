@@ -31,9 +31,27 @@ export interface Sponsorship {
   createdAt: string;
 }
 
+export interface PaginatedResult<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+let abortController: AbortController | null = null;
+
+function abortPrevious() {
+  if (abortController) {
+    abortController.abort();
+  }
+  abortController = new AbortController();
+  return abortController.signal;
+}
+
 export async function captureElementAsImage(el: HTMLElement, filename = 'id-card.png'): Promise<void> {
   const { default: html2canvas } = await import('html2canvas');
-  const canvas = await html2canvas(el, { useCORS: true, scale: 2, backgroundColor: '#ffffff' } as Record<string, unknown>);
+  const canvas = await html2canvas(el, { useCORS: true, scale: 3, backgroundColor: '#ffffff', logging: false, allowTaint: true } as Record<string, unknown>);
   const url = canvas.toDataURL('image/png');
   const link = document.createElement('a');
   link.href = url;
@@ -78,8 +96,12 @@ function spnApiToUI(s: Record<string, unknown>): Sponsorship {
   };
 }
 
-async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, { ...init, cache: 'no-store' });
+async function apiFetch<T>(url: string, init?: RequestInit, signal?: AbortSignal): Promise<T> {
+  const res = await fetch(url, {
+    ...init,
+    cache: 'no-store',
+    signal,
+  });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.error || `API error ${res.status}`);
@@ -89,12 +111,62 @@ async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
 
 // ── Registrations ────────────────────────────────────
 
-export async function getRegistrations(params?: { search?: string; date?: string }): Promise<Registration[]> {
+export async function getRegistrations(params?: {
+  search?: string;
+  date?: string;
+  page?: number;
+  limit?: number;
+}): Promise<PaginatedResult<Registration>> {
   const sp = new URLSearchParams();
   if (params?.search) sp.set('search', params.search);
   if (params?.date) sp.set('date', params.date);
-  sp.set('limit', '500');
-  const data = await apiFetch<{ registrations: Record<string, unknown>[] }>(`/api/registrations?${sp}`);
+  sp.set('page', String(params?.page || 1));
+  sp.set('limit', String(Math.min(params?.limit || 50, 200)));
+
+  const signal = abortPrevious();
+  const data = await apiFetch<{
+    registrations: Record<string, unknown>[];
+    total: number;
+  }>(`/api/registrations?${sp}`, undefined, signal);
+
+  const page = params?.page || 1;
+  const limit = params?.limit || 50;
+
+  return {
+    items: data.registrations.map(regApiToUI),
+    total: data.total || 0,
+    page,
+    limit,
+    totalPages: Math.ceil((data.total || 0) / limit),
+  };
+}
+
+export async function getRegistrationsFlat(params?: {
+  search?: string;
+  date?: string;
+  limit?: number;
+}): Promise<Registration[]> {
+  const sp = new URLSearchParams();
+  if (params?.search) sp.set('search', params.search);
+  if (params?.date) sp.set('date', params.date);
+  sp.set('limit', String(Math.min(params?.limit || 50, 200)));
+
+  const data = await apiFetch<{
+    registrations: Record<string, unknown>[];
+  }>(`/api/registrations?${sp}`);
+
+  return data.registrations.map(regApiToUI);
+}
+
+export async function getCheckedInRegistrations(limit = 20): Promise<Registration[]> {
+  const sp = new URLSearchParams();
+  sp.set('limit', String(Math.min(limit, 50)));
+  sp.set('checkedIn', 'true');
+
+  const data = await apiFetch<{
+    registrations: Record<string, unknown>[];
+  }>(`/api/registrations?${sp}`);
+
   return data.registrations.map(regApiToUI);
 }
 
@@ -147,12 +219,32 @@ export async function checkIn(regId: string): Promise<void> {
 
 // ── Sponsorships ─────────────────────────────────────
 
-export async function getSponsorships(params?: { search?: string }): Promise<Sponsorship[]> {
+export async function getSponsorships(params?: {
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<PaginatedResult<Sponsorship>> {
   const sp = new URLSearchParams();
   if (params?.search) sp.set('search', params.search);
-  sp.set('limit', '200');
-  const data = await apiFetch<{ sponsorships: Record<string, unknown>[] }>(`/api/sponsorships?${sp}`);
-  return data.sponsorships.map(spnApiToUI);
+  sp.set('page', String(params?.page || 1));
+  sp.set('limit', String(Math.min(params?.limit || 50, 200)));
+
+  const signal = abortPrevious();
+  const data = await apiFetch<{
+    sponsorships: Record<string, unknown>[];
+    total: number;
+  }>(`/api/sponsorships?${sp}`, undefined, signal);
+
+  const page = params?.page || 1;
+  const limit = params?.limit || 50;
+
+  return {
+    items: data.sponsorships.map(spnApiToUI),
+    total: data.total || 0,
+    page,
+    limit,
+    totalPages: Math.ceil((data.total || 0) / limit),
+  };
 }
 
 export async function addSponsorship(formData: FormData): Promise<{ sponsorId: string }> {
@@ -215,4 +307,18 @@ export function downloadCSV(filename: string, csvContent: string) {
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+// ── Debounce utility ─────────────────────────────────
+
+export function debounce<T extends (...args: never[]) => void>(fn: T, ms: number): T & { cancel: () => void } {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const debounced = (...args: Parameters<T>) => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), ms);
+  };
+  debounced.cancel = () => {
+    if (timer) clearTimeout(timer);
+  };
+  return debounced as unknown as T & { cancel: () => void };
 }

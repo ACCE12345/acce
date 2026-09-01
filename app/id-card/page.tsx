@@ -41,7 +41,7 @@ function IdCardContent() {
   const handleDownloadCard = async () => {
     if (!cardRef.current || !record) return;
     try {
-      showToast('Preparing your ID card image…');
+      showToast('Preparing your ID card image...');
       await captureElementAsImage(cardRef.current, `${record?.regId || 'id'}-idcard.png`);
       showToast('ID card downloaded.', 'success');
     } catch {
@@ -83,7 +83,7 @@ function IdCardContent() {
         {banner}
         <div style={styles.shell}>
           <div style={styles.emptyCard}>
-            <span style={{ color: '#8A8E96', fontSize: 14 }}>Loading…</span>
+            <span style={{ color: '#8A8E96', fontSize: 14 }}>Loading...</span>
           </div>
         </div>
       </>
@@ -96,7 +96,7 @@ function IdCardContent() {
         {banner}
         <div style={styles.shell}>
           <div style={styles.emptyCard}>
-            <h2 style={{ fontSize: 22, fontFamily: 'var(--font-display)', margin: '0 0 10px' }}>
+            <h2 style={{ fontSize: 22, fontFamily: "'Fraunces', serif", margin: '0 0 10px' }}>
               No registration found
             </h2>
             <p style={{ color: '#8A8E96', minHeight: 22 }}>
@@ -116,10 +116,10 @@ function IdCardContent() {
         <div ref={cardRef} style={styles.idcard}>
           <div style={styles.idcardHead}>
             <div style={styles.logoRow}>
-              <Image src="/img/1.jpeg" alt="Partner" width={50} height={30} style={{ height: 30, width: 'auto', objectFit: 'contain' }} />
-              <Image src="/img/2.jpeg" alt="Partner" width={50} height={30} style={{ height: 30, width: 'auto', objectFit: 'contain' }} />
+              <Image src="/img/logo.png" alt="ACCE" width={60} height={44} style={{ height: 44, width: 'auto', objectFit: 'contain' }} />
+              <Image src="/img/2.jpeg" alt="Partner" width={60} height={44} style={{ height: 44, width: 'auto', objectFit: 'contain' }} />
             </div>
-            <h3 style={styles.headTitle}>ACCE · Build Expo 2026</h3>
+            <h3 style={styles.headTitle}>Build Expo 2026</h3>
           </div>
 
           <div style={styles.idcardBody}>
@@ -156,9 +156,9 @@ function IdCardContent() {
 
           <div style={styles.idcardFooter}>
             <div style={styles.poweredBy}>
-              Powered by
-              <img src="/img/a+.png" alt="A+ Tech Services" style={{ height: 14, width: 'auto', verticalAlign: 'middle', marginLeft: 4 }} />
-              A+ Tech Services
+              Powered by{' '}
+              <img src="/img/a+.png" alt="A+ Tech Services" style={{ height: 18, width: 'auto', verticalAlign: 'middle', marginLeft: 4 }} />
+              {' '}A+ Tech Services
             </div>
             <div style={styles.idcardStatus}>Registered Participant</div>
           </div>
@@ -166,7 +166,7 @@ function IdCardContent() {
 
         <div className="idcard-actions" style={styles.actions}>
           <button className="btn btn-gold" onClick={handleDownloadCard}>Download ID Card</button>
-          <button className="btn" style={{ background: 'transparent', color: 'var(--ink)', border: '1px solid var(--line)' }} onClick={handleDownloadQR}>
+          <button className="btn" style={{ background: 'transparent', color: '#0A2647', border: '1px solid rgba(10,38,71,0.12)' }} onClick={handleDownloadQR}>
             Download QR Code
           </button>
           <Link href="/" className="btn btn-dark" style={{ textDecoration: 'none' }}>Back to Home</Link>
@@ -179,7 +179,7 @@ function IdCardContent() {
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, padding: '6px 0' }}>
-      <span style={{ color: '#8A8E96', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', fontSize: 10.5, letterSpacing: '0.05em' }}>{label}</span>
+      <span style={{ color: '#8A8E96', fontFamily: "'IBM Plex Mono', monospace", textTransform: 'uppercase', fontSize: 10.5, letterSpacing: '0.05em' }}>{label}</span>
       <span style={{ fontWeight: 600, textAlign: 'right' }}>{value}</span>
     </div>
   );
@@ -187,22 +187,22 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 
 const styles: Record<string, React.CSSProperties> = {
   pageBanner: {
-    background: 'linear-gradient(160deg, var(--ink-softer) 0%, var(--ink) 55%, #061A33 100%)',
-    color: 'var(--paper)',
+    background: 'linear-gradient(160deg, #1D4E86 0%, #0A2647 55%, #061A33 100%)',
+    color: '#FFFFFF',
     padding: '150px 0 60px',
     position: 'relative',
     overflow: 'hidden',
   },
   breadcrumb: {
-    fontFamily: 'var(--font-mono)',
+    fontFamily: "'IBM Plex Mono', monospace",
     fontSize: 12,
     color: '#8FA9CC',
     marginBottom: 16,
   },
   bannerTitle: {
-    fontFamily: 'var(--font-display)',
+    fontFamily: "'Fraunces', serif",
     fontSize: 'clamp(30px, 4vw, 48px)',
-    color: 'var(--paper)',
+    color: '#FFFFFF',
     margin: 0,
     lineHeight: 1.15,
   },
@@ -217,42 +217,43 @@ const styles: Record<string, React.CSSProperties> = {
     overflow: 'hidden',
   },
   emptyCard: {
-    background: '#fff',
-    border: '1px solid var(--line)',
+    background: '#FFFFFF',
+    border: '1px solid rgba(10,38,71,0.12)',
     borderRadius: 20,
-    boxShadow: 'var(--glow)',
+    boxShadow: '0 0 0 1px rgba(124,172,227,0.22), 0 30px 70px -20px rgba(68,132,209,0.55)',
     padding: '50px 44px',
     textAlign: 'center',
     maxWidth: 440,
     width: '100%',
   },
   idcard: {
-    width: 380,
+    width: 400,
     maxWidth: '92vw',
-    background: '#fff',
-    borderRadius: 'var(--radius-lg)',
+    background: '#FFFFFF',
+    borderRadius: 16,
     overflow: 'hidden',
-    boxShadow: 'var(--glow)',
+    boxShadow: '0 30px 80px -24px rgba(10,38,71,0.45), 0 10px 28px -12px rgba(68,132,209,0.3)',
   },
   idcardHead: {
     background: 'linear-gradient(135deg, #0A2647, #1D4E86)',
-    color: '#fff',
-    padding: '16px 26px 20px',
+    color: '#FFFFFF',
+    padding: '20px 28px 24px',
     textAlign: 'center',
   },
   logoRow: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 20,
-    marginBottom: 8,
+    gap: 24,
+    marginBottom: 10,
   },
   headTitle: {
-    color: '#fff',
-    fontSize: 15,
-    letterSpacing: '0.06em',
+    color: '#FFFFFF',
+    fontSize: 20,
+    letterSpacing: '0.08em',
     textTransform: 'uppercase' as const,
-    fontFamily: 'var(--font-mono)',
+    fontFamily: "'IBM Plex Mono', monospace",
+    fontWeight: 700,
     margin: 0,
   },
   photoWrap: {
@@ -264,7 +265,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: 80,
     height: 80,
     borderRadius: '50%',
-    border: '3px solid #fff',
+    border: '3px solid #FFFFFF',
     background: 'linear-gradient(135deg, #0A2647, #1D4E86)',
     overflow: 'hidden',
     boxShadow: '0 4px 12px rgba(0,0,0,.25)',
@@ -277,28 +278,29 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: 'center',
   },
   name: {
-    fontFamily: 'var(--font-display)',
+    fontFamily: "'Fraunces', serif",
     fontSize: 23,
     marginBottom: 4,
     fontWeight: 700,
+    color: '#0A2647',
   },
   role: {
-    fontFamily: 'var(--font-mono)',
+    fontFamily: "'IBM Plex Mono', monospace",
     fontSize: 11.5,
-    color: 'var(--teal)',
+    color: '#2E63A8',
     textTransform: 'uppercase' as const,
     letterSpacing: '0.06em',
   },
   details: {
     textAlign: 'left',
     marginTop: 22,
-    borderTop: '1px dashed var(--line)',
+    borderTop: '1px dashed rgba(10,38,71,0.12)',
     paddingTop: 18,
   },
   perfLine: {
     position: 'relative',
     height: 0,
-    borderTop: '2px dashed var(--line)',
+    borderTop: '2px dashed rgba(10,38,71,0.12)',
     marginTop: 22,
   },
   perfHoleLeft: {
@@ -308,7 +310,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: 18,
     height: 18,
     borderRadius: '50%',
-    background: 'var(--paper)',
+    background: '#FFFFFF',
   },
   perfHoleRight: {
     position: 'absolute',
@@ -317,7 +319,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: 18,
     height: 18,
     borderRadius: '50%',
-    background: 'var(--paper)',
+    background: '#FFFFFF',
   },
   qrSection: {
     display: 'flex',
@@ -329,15 +331,15 @@ const styles: Record<string, React.CSSProperties> = {
   qrBox: {
     width: 120,
     height: 120,
-    border: '1px solid var(--line)',
+    border: '1px solid rgba(10,38,71,0.12)',
     borderRadius: 8,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: '#fff',
+    background: '#FFFFFF',
   },
   qrLabel: {
-    fontFamily: 'var(--font-mono)',
+    fontFamily: "'IBM Plex Mono', monospace",
     fontSize: 10,
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
@@ -351,18 +353,20 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    fontSize: 10,
-    color: '#8A8E96',
-    fontFamily: 'var(--font-mono)',
-    padding: '10px 0 6px',
+    fontSize: 13,
+    color: '#5A6270',
+    fontFamily: "'IBM Plex Mono', monospace",
+    fontWeight: 500,
+    padding: '12px 0 6px',
   },
   idcardStatus: {
-    background: 'linear-gradient(135deg, var(--teal), var(--teal-bright))',
-    color: '#fff',
+    background: 'linear-gradient(135deg, #2E63A8, #4484D1)',
+    color: '#FFFFFF',
     textAlign: 'center',
-    padding: 10,
-    fontFamily: 'var(--font-mono)',
-    fontSize: 11,
+    padding: 12,
+    fontFamily: "'IBM Plex Mono', monospace",
+    fontSize: 12,
+    fontWeight: 600,
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
   },

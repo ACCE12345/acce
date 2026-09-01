@@ -324,11 +324,12 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid var(--line)',
     borderRadius: 10,
     fontFamily: 'var(--font-body)',
-    fontSize: 14.5,
+    fontSize: 16,
     background: 'var(--paper)',
     transition: 'border-color 0.2s, box-shadow 0.2s',
     boxSizing: 'border-box' as const,
     outline: 'none',
+    minHeight: 48,
   },
   uploadBox: {
     border: '1.5px dashed rgba(68,132,209,0.4)',

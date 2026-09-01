@@ -60,8 +60,9 @@ export async function GET(request: NextRequest) {
 
     const search = searchParams.get('search') || '';
     const date = searchParams.get('date') || '';
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const limit = Math.min(parseInt(searchParams.get('limit') || '500', 10), 2000);
+    const checkedIn = searchParams.get('checkedIn') || '';
+    const page = Math.max(parseInt(searchParams.get('page') || '1', 10), 1);
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '50', 10), 1), 200);
     const offset = (page - 1) * limit;
 
     let query = supabase
@@ -75,6 +76,11 @@ export async function GET(request: NextRequest) {
     }
     if (date) {
       query = query.gte('created_at', `${date}T00:00:00Z`).lt('created_at', `${date}T23:59:59Z`);
+    }
+    if (checkedIn === 'true') {
+      query = query.eq('checked_in', true);
+    } else if (checkedIn === 'false') {
+      query = query.eq('checked_in', false);
     }
 
     const { data, error, count } = await query;

@@ -165,7 +165,7 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid var(--line)',
     borderRadius: 'var(--radius-lg)',
     boxShadow: 'var(--glow)',
-    padding: '50px 44px',
+    padding: '40px 28px',
   },
   successIcon: {
     width: 74,
