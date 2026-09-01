@@ -39,14 +39,12 @@ export interface PaginatedResult<T> {
   totalPages: number;
 }
 
-let abortController: AbortController | null = null;
-
-function abortPrevious() {
-  if (abortController) {
-    abortController.abort();
-  }
-  abortController = new AbortController();
-  return abortController.signal;
+export function createAbortController(): { signal: AbortSignal; cancel: () => void } {
+  const controller = new AbortController();
+  return {
+    signal: controller.signal,
+    cancel: () => controller.abort(),
+  };
 }
 
 export async function captureElementAsImage(el: HTMLElement, filename = 'id-card.png'): Promise<void> {
@@ -123,11 +121,10 @@ export async function getRegistrations(params?: {
   sp.set('page', String(params?.page || 1));
   sp.set('limit', String(Math.min(params?.limit || 50, 200)));
 
-  const signal = abortPrevious();
   const data = await apiFetch<{
     registrations: Record<string, unknown>[];
     total: number;
-  }>(`/api/registrations?${sp}`, undefined, signal);
+  }>(`/api/registrations?${sp}`);
 
   const page = params?.page || 1;
   const limit = params?.limit || 50;
@@ -229,11 +226,10 @@ export async function getSponsorships(params?: {
   sp.set('page', String(params?.page || 1));
   sp.set('limit', String(Math.min(params?.limit || 50, 200)));
 
-  const signal = abortPrevious();
   const data = await apiFetch<{
     sponsorships: Record<string, unknown>[];
     total: number;
-  }>(`/api/sponsorships?${sp}`, undefined, signal);
+  }>(`/api/sponsorships?${sp}`);
 
   const page = params?.page || 1;
   const limit = params?.limit || 50;
