@@ -9,16 +9,14 @@ export async function DELETE(
     const { id } = await params;
     const supabase = getSupabaseServer();
 
-    const { data: item, error: fetchError } = await supabase
+    const { data: item } = await supabase
       .from('gallery')
       .select('storage_path')
       .eq('id', id)
       .single();
 
-    if (fetchError) throw fetchError;
-
     if (item?.storage_path) {
-      await supabase.storage.from('gallery').remove([item.storage_path]);
+      await supabase.storage.from('gallery').remove([item.storage_path]).catch(() => {});
     }
 
     const { error } = await supabase.from('gallery').delete().eq('id', id);

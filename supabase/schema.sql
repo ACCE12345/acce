@@ -64,6 +64,20 @@ create index idx_sponsorships_created_at on sponsorships (created_at desc);
 insert into storage.buckets (id, name, public) values ('avatars', 'avatars', true);
 insert into storage.buckets (id, name, public) values ('payments', 'payments', true);
 insert into storage.buckets (id, name, public) values ('logos', 'logos', true);
+insert into storage.buckets (id, name, public) values ('gallery', 'gallery', true);
+
+-- ── Gallery table ─────────────────────────────────────
+create table if not exists gallery (
+  id           uuid primary key default uuid_generate_v4(),
+  title        text,
+  caption      text,
+  image_url    text not null,
+  storage_path text,
+  sort_order   integer default 0,
+  created_at   timestamptz default now()
+);
+
+create index idx_gallery_sort on gallery (sort_order asc, created_at desc);
 
 -- ── Storage RLS policies ──────────────────────────────
 -- Anyone can upload to avatars (registration is public)
@@ -92,6 +106,15 @@ create policy "Public can upload logos"
 create policy "Public can view logos"
   on storage.objects for select
   using (bucket_id = 'logos');
+
+-- Gallery: admin uploads via service role, public can view
+create policy "Service role full access on gallery storage"
+  on storage.objects for all
+  using (bucket_id = 'gallery' and auth.role() = 'service_role');
+
+create policy "Public can view gallery"
+  on storage.objects for select
+  using (bucket_id = 'gallery');
 
 -- ── Table RLS policies ────────────────────────────────
 -- Registrations: public can insert (registration form), admin can do everything
@@ -122,4 +145,15 @@ create policy "Public can read sponsorships"
 
 create policy "Service role full access on sponsorships"
   on sponsorships for all
+  using (auth.role() = 'service_role');
+
+-- Gallery: public can read, service role can do everything
+alter table gallery enable row level security;
+
+create policy "Public can read gallery"
+  on gallery for select
+  using (true);
+
+create policy "Service role full access on gallery"
+  on gallery for all
   using (auth.role() = 'service_role');

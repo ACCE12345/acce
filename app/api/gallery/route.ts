@@ -10,10 +10,13 @@ export async function GET() {
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.warn('Gallery table may not exist yet:', error.message);
+      return NextResponse.json({ images: [] });
+    }
     return NextResponse.json({ images: data || [] });
   } catch (err) {
-    console.error('Gallery GET error:', err);
+    console.warn('Gallery GET skipped:', (err as Error).message);
     return NextResponse.json({ images: [] });
   }
 }
@@ -32,10 +35,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File must be under 5MB' }, { status: 400 });
     }
 
+    const supabase = getSupabaseServer();
+
     const ext = file.name.split('.').pop() || 'jpg';
     const filename = `gallery/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-
-    const supabase = getSupabaseServer();
 
     const { error: uploadError } = await supabase.storage
       .from('gallery')
@@ -44,7 +47,10 @@ export async function POST(request: NextRequest) {
         upsert: false,
       });
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError);
+      return NextResponse.json({ error: `Storage error: ${uploadError.message}. Create a 'gallery' bucket in Supabase Storage.` }, { status: 500 });
+    }
 
     const { data: urlData } = supabase.storage.from('gallery').getPublicUrl(filename);
 
@@ -56,7 +62,10 @@ export async function POST(request: NextRequest) {
       sort_order: 0,
     });
 
-    if (dbError) throw dbError;
+    if (dbError) {
+      console.error('Gallery DB insert error:', dbError);
+      return NextResponse.json({ error: `Database error: ${dbError.message}. Run the gallery table SQL in Supabase.` }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true, url: urlData.publicUrl });
   } catch (err) {

@@ -77,13 +77,10 @@ export function middleware(request: NextRequest) {
   }
 
   // Protect gallery admin routes (GET is public)
-  if (pathname.startsWith('/api/gallery') && pathname !== '/api/gallery') {
-    const method = request.method;
-    if (method !== 'GET') {
-      const accessToken = request.cookies.get('sb-access-token')?.value;
-      if (!accessToken) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
+  if (pathname.startsWith('/api/gallery') && request.method !== 'GET') {
+    const accessToken = request.cookies.get('sb-access-token')?.value;
+    if (!accessToken) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
   }
 
