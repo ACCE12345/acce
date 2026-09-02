@@ -262,6 +262,35 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Gallery ── */}
+      {galleryImages.length > 0 && (
+        <section className="section" id="gallery" style={{ background: 'var(--paper)' }}>
+          <div className="container">
+            <div className="section-head" style={{ textAlign: 'center', maxWidth: 640, margin: '0 auto 40px' }}>
+              <span className="eyebrow">Gallery</span>
+              <h2>Event Moments</h2>
+            </div>
+            <div className="gallery-grid">
+              {galleryImages.map((img) => (
+                <div key={img.id} className="gallery-card">
+                  <img
+                    src={img.image_url}
+                    alt={img.title || 'Event photo'}
+                    className="gallery-img"
+                  />
+                  {(img.title || img.caption) && (
+                    <div className="gallery-info">
+                      {img.title && <div className="gallery-title">{img.title}</div>}
+                      {img.caption && <div className="gallery-caption">{img.caption}</div>}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ── Highlights ── */}
       <section className="section section-alt" id="highlights">
         <div className="container">
@@ -301,35 +330,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* ── Gallery ── */}
-      {galleryImages.length > 0 && (
-        <section className="section" id="gallery" style={{ background: 'var(--paper)' }}>
-          <div className="container">
-            <div className="section-head" style={{ textAlign: 'center', maxWidth: 640, margin: '0 auto 40px' }}>
-              <span className="eyebrow">Gallery</span>
-              <h2>Event Moments</h2>
-            </div>
-            <div className="gallery-grid">
-              {galleryImages.map((img) => (
-                <div key={img.id} className="gallery-card">
-                  <img
-                    src={img.image_url}
-                    alt={img.title || 'Event photo'}
-                    className="gallery-img"
-                  />
-                  {(img.title || img.caption) && (
-                    <div className="gallery-info">
-                      {img.title && <div className="gallery-title">{img.title}</div>}
-                      {img.caption && <div className="gallery-caption">{img.caption}</div>}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* ── CTA Banner ── */}
       <section className="cta-banner">
