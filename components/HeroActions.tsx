@@ -13,6 +13,14 @@ export default function HeroActions() {
       >
         Download Your ID Card
       </button>
+      <a
+        href="https://maps.app.goo.gl/k3fTfiv8GZz3XKFC9"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="btn btn-outline"
+      >
+        View Location on Maps
+      </a>
     </div>
   );
 }
