@@ -25,7 +25,7 @@ export default function HeroSlideshow() {
         <Image
           key={src}
           src={src}
-          alt=""
+          alt={`ACCE Build Expo 2026 event photo ${i + 1}`}
           fill
           sizes="100vw"
           priority={i === 0}

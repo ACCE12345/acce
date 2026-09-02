@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { findRegistration } from '@/lib/nexus-store';
 import type { Registration } from '@/lib/nexus-store';
 import QrCode from '@/components/QrCode';
@@ -91,18 +90,16 @@ export default function SuccessPage() {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>
-            <div style={{ width: 88, height: 88, borderRadius: '50%', overflow: 'hidden', border: '3px solid var(--teal)', background: '#eee' }}>
-              {record.photo
-                ? <Image src={record.photo} alt={record.fullName} width={88} height={88} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-mono)', fontSize: 10, color: '#8A8E96' }}>No photo</div>
-              }
+            <div style={{ width: 88, height: 88, borderRadius: '50%', overflow: 'hidden', border: '3px solid var(--teal)', background: 'linear-gradient(135deg, #0A2647, #1D4E86)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: 36, fontWeight: 700, color: '#fff' }}>{record.primaryName.charAt(0)}</span>
             </div>
           </div>
 
           <div style={styles.summary}>
-            <SummaryRow label="Name" value={record.fullName} />
-            <SummaryRow label="Email" value={record.email} />
-            <SummaryRow label="Phone" value={`+91 ${record.mobile}`} />
+            <SummaryRow label="Name" value={record.primaryName} />
+            <SummaryRow label="Email" value={record.primaryEmail || '---'} />
+            <SummaryRow label="Phone" value={`+91 ${record.primaryMobile}`} />
+            <SummaryRow label="Total Members" value={String(record.totalMembers)} />
           </div>
 
           <div style={styles.actions}>

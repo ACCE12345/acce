@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Footer() {
   return (
@@ -8,7 +9,7 @@ export default function Footer() {
           <div>
             <Link href="/" className="brand" style={{ color: 'var(--paper)' }}>
               <span className="brand-mark">
-                <img src="/img/logo.png" alt="ACCE" />
+                <Image src="/img/logo.png" alt="ACCE" width={34} height={34} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </span>
               ACCE(I), Warangal Centre
             </Link>
@@ -50,7 +51,7 @@ export default function Footer() {
           <span>&copy; 2026 ACCE(I), Warangal Centre. All rights reserved.</span>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             Powered by
-            <img src="/img/a+.png" alt="A+ Tech Services" style={{ height: 20, width: 'auto', verticalAlign: 'middle' }} />
+            <Image src="/img/a+.png" alt="A+ Tech Services" width={80} height={20} style={{ height: 20, width: 'auto', verticalAlign: 'middle' }} />
             A+ Tech Services
           </span>
         </div>

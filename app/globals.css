@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 /* =========================================================
    GPU ACCELERATION — compositor layer hints
    ========================================================= */
@@ -73,6 +75,17 @@
   --brick:      #D64B4B;
   --line:       rgba(10,38,71,0.12);
   --line-dark:  rgba(255,255,255,0.16);
+
+  /* Tailwind arbitrary value aliases (used in registration form) */
+  --bg-main:        var(--paper);
+  --bg-main-alt:    #F7F9FC;
+  --text-main:      var(--ink);
+  --text-secondary: #5A6270;
+  --text-muted:     #8A8E96;
+  --border-light:   var(--line);
+  --accent:         var(--teal);
+  --accent-light:   #E8EFF8;
+  --accent-hover:   var(--teal-bright);
 
   --font-display: 'Fraunces', serif;
   --font-body: 'Public Sans', -apple-system, sans-serif;
@@ -693,7 +706,7 @@ p{margin:0 0 1em;color:#4A5568;}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
 
 /* Ensure all interactive elements meet 48px minimum tap target */
-.action-btn{min-height:44px;min-width:44px;}
+.action-btn{min-width:44px;}
 .pagination-btn{min-height:44px;}
 .reg-input{min-height:48px;}
 .sponsor-form-grid input,.sponsor-form-grid textarea{min-height:48px;}

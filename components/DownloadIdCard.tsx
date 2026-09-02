@@ -119,7 +119,7 @@ export default function DownloadIdCard({ variant = 'light' }: { variant?: 'light
 
               {/* Card body */}
               <div style={{ padding: '12px 28px 10px', textAlign: 'center' }}>
-                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 23, marginBottom: 4, fontWeight: 700, color: '#0A2647' }}>{record.fullName}</div>
+                <div style={{ fontFamily: "'Fraunces', serif", fontSize: 23, marginBottom: 4, fontWeight: 700, color: '#0A2647' }}>{record.primaryName}</div>
                 <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11.5, color: '#2E63A8', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>
                   {record.category || 'Delegate'}
                 </div>
@@ -131,17 +131,15 @@ export default function DownloadIdCard({ variant = 'light' }: { variant?: 'light
                     background: 'linear-gradient(135deg, #0A2647, #1D4E86)',
                     overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,.25)',
                   }}>
-                    {record.photo
-                      ? <img src={record.photo} alt={record.fullName} crossOrigin="anonymous" style={{ width: 80, height: 80, display: 'block' }} />
-                      : <span style={{ fontSize: 36, fontWeight: 700, color: '#fff', lineHeight: '74px', textAlign: 'center', display: 'block' }}>{record.fullName.charAt(0)}</span>
-                    }
+                    <span style={{ fontSize: 36, fontWeight: 700, color: '#fff', lineHeight: '74px', textAlign: 'center', display: 'block' }}>{record.primaryName.charAt(0)}</span>
                   </div>
                 </div>
                 <div style={{ textAlign: 'left', marginTop: 22, borderTop: '1px dashed rgba(10,38,71,0.12)', paddingTop: 18 }}>
                   {[
                     ['Reg. ID', record.regId],
-                    ['Email', record.email],
-                    ['Phone', `+91 ${record.mobile}`],
+                    ['Email', record.primaryEmail || '---'],
+                    ['Phone', `+91 ${record.primaryMobile}`],
+                    ['Members', String(record.totalMembers)],
                   ].map(([label, value]) => (
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, padding: '6px 0' }}>
                       <span style={{ color: '#8A8E96', fontFamily: "'IBM Plex Mono', monospace", textTransform: 'uppercase' as const, fontSize: 10.5, letterSpacing: '0.05em' }}>{label}</span>

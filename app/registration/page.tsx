@@ -1,8 +1,7 @@
-'use client';
+﻿'use client';
 
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
-import { addRegistration } from '@/lib/nexus-store';
 import { useToast } from '@/lib/toast';
 
 const INDIAN_STATES = [
@@ -18,6 +17,7 @@ const INDIAN_STATES = [
 ];
 
 const CATEGORIES = ['Delegate', 'Builder/Contractor', 'Engineer', 'Architect'];
+const MAX_ACCOMPANYING = 4;
 
 interface FormData {
   fullName: string;
@@ -42,15 +42,36 @@ const INITIAL: FormData = {
 export default function RegistrationPage() {
   const { showToast } = useToast();
   const [form, setForm] = useState<FormData>(INITIAL);
+  const [accompanyingCount, setAccompanyingCount] = useState(0);
+  const [accompanyingNames, setAccompanyingNames] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [resultId, setResultId] = useState('');
+  const [totalMembers, setTotalMembers] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const set = useCallback((key: keyof FormData, val: string) => {
     setForm((p) => ({ ...p, [key]: val }));
     setErrors((p) => { const n = { ...p }; delete n[key]; return n; });
   }, []);
+
+  const handleAccompanyingChange = (count: number) => {
+    setAccompanyingCount(count);
+    setAccompanyingNames((prev) => {
+      if (count > prev.length) {
+        return [...prev, ...Array(count - prev.length).fill('')];
+      }
+      return prev.slice(0, count);
+    });
+  };
+
+  const handleMemberNameChange = (index: number, name: string) => {
+    setAccompanyingNames((prev) => {
+      const updated = [...prev];
+      updated[index] = name;
+      return updated;
+    });
+  };
 
   const validate = (): boolean => {
     const e: Record<string, string> = {};
@@ -59,6 +80,12 @@ export default function RegistrationPage() {
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Valid email required';
     if (!form.category) e.category = 'Category is required';
     if (!form.state) e.state = 'State is required';
+    // Validate accompanying member names
+    for (let i = 0; i < accompanyingCount; i++) {
+      if (!accompanyingNames[i]?.trim()) {
+        e[`member_${i}`] = `Member ${i + 1} name is required`;
+      }
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -67,21 +94,35 @@ export default function RegistrationPage() {
     if (!validate()) return;
     setSubmitting(true);
     try {
-      const fd = new FormData();
-      fd.append('fullName', form.fullName.trim());
-      fd.append('mobile', form.mobile.trim());
-      fd.append('email', form.email.trim());
-      fd.append('category', form.category);
-      fd.append('city', form.district.trim());
-      fd.append('state', form.state);
+      const members = accompanyingNames
+        .filter((name) => name.trim())
+        .map((name) => ({ name: name.trim() }));
 
-      const result = await addRegistration(fd);
-      setResultId(result.regId);
-      sessionStorage.setItem('nexus_last_reg', result.regId);
+      const response = await fetch('/api/registrations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          primaryName: form.fullName.trim(),
+          primaryMobile: form.mobile.trim(),
+          primaryEmail: form.email.trim(),
+          category: form.category,
+          city: form.district.trim(),
+          state: form.state,
+          country: 'India',
+          pin: '',
+          isACCEMember: false,
+          accompanyingMembers: members,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Registration failed');
+      setResultId(data.regId);
+      setTotalMembers(data.totalMembers || (1 + accompanyingCount));
+      sessionStorage.setItem('nexus_last_reg', data.regId);
       setShowSuccess(true);
       showToast('Registration successful!', 'success');
     } catch (err: any) {
-      const msg = err?.message || err?.error || 'Something went wrong. Please try again.';
+      const msg = err?.message || 'Something went wrong. Please try again.';
       showToast(typeof msg === 'string' ? msg : 'Something went wrong. Please try again.', 'error');
     } finally {
       setSubmitting(false);
@@ -119,10 +160,10 @@ export default function RegistrationPage() {
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--teal)' }}>Registration ID</span>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 16, fontWeight: 700, color: 'var(--ink)', letterSpacing: '0.04em' }}>{resultId}</span>
             </div>
-
+            
             <div style={{ padding: '10px 14px', background: 'rgba(22,163,74,0.08)', borderRadius: 8, textAlign: 'center', margin: '12px 0' }}>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: '#16a34a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Your digital ID card is ready
+                Total Members: {totalMembers}
               </span>
             </div>
 
@@ -142,6 +183,12 @@ export default function RegistrationPage() {
               ))}
             </div>
 
+            <div style={{ padding: '12px', background: '#FEF3C7', borderRadius: 8, marginTop: 12, textAlign: 'left' }}>
+              <p style={{ fontSize: 12, color: '#92400E', margin: 0, fontFamily: 'var(--font-mono)' }}>
+                <strong>Important:</strong> Please save this Registration ID for entry at the event. One ID covers all {totalMembers} members.
+              </p>
+            </div>
+
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontSize: 9, color: '#8A8E96', fontFamily: 'var(--font-mono)', padding: '12px 0 4px' }}>
               Powered by
               <img src="/img/a+.png" alt="A+ Tech Services" style={{ height: 12, width: 'auto', verticalAlign: 'middle', marginLeft: 4 }} />
@@ -154,7 +201,7 @@ export default function RegistrationPage() {
               View Digital ID Card
             </Link>
             <Link href="/" style={{ ...styles.popupBtn, ...styles.popupBtnSecondary }}>
-              Back to Home
+              Go Home
             </Link>
           </div>
         </div>
@@ -164,67 +211,177 @@ export default function RegistrationPage() {
 
   return (
     <div style={styles.page}>
-      <div className="reg-banner" style={styles.headerBanner}>
-        <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 28px', position: 'relative', zIndex: 1 }}>
-          <span style={styles.eyebrow}>Registration</span>
-          <h1 style={styles.bannerTitle}>Build Expo 2026</h1>
-          <p style={{ color: '#B8CCE4', fontSize: 15, margin: 0 }}>Complete the form below to secure your delegate pass</p>
+      <div style={styles.headerBanner}>
+        <div className="container">
+          <div style={styles.eyebrow}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+              <path d="M7 0L8.5 5.5L14 7L8.5 8.5L7 14L5.5 8.5L0 7L5.5 5.5L7 0Z" />
+            </svg>
+            ACCE Build Expo 2026
+          </div>
+          <h1 style={styles.bannerTitle}>Delegate Registration</h1>
         </div>
       </div>
 
-      <div style={{ maxWidth: 640, margin: '0 auto', padding: '0 20px', marginTop: -30, position: 'relative', zIndex: 2 }}>
-        <div className="reg-card" style={styles.card}>
-          <h3 style={styles.sectionTitle}>Register</h3>
-
-          <div style={{ marginBottom: 18 }}>
-            <label style={styles.label}>Full Name <span style={{ color: 'var(--brick)', marginLeft: 2 }}>*</span></label>
-            <input className="reg-input" style={styles.input} placeholder="Enter your full name" maxLength={100} value={form.fullName} onChange={(e) => set('fullName', e.target.value)} />
-            {errors.fullName && <span style={{ color: 'var(--brick)', fontSize: 12, marginTop: 4, display: 'block' }}>{errors.fullName}</span>}
+      <div className="container">
+        <div style={styles.card}>
+          <h2 style={styles.sectionTitle}>Primary Registrant</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+            <div>
+              <label style={styles.label}>Full Name <span style={{ color: '#EF4444' }}>*</span></label>
+              <input
+                style={{ ...styles.input, borderColor: errors.fullName ? '#EF4444' : undefined }}
+                placeholder="Enter your full name"
+                value={form.fullName}
+                onChange={(e) => set('fullName', e.target.value)}
+                maxLength={100}
+              />
+              {errors.fullName && <span style={{ fontSize: 12, color: '#EF4444', marginTop: 4 }}>{errors.fullName}</span>}
+            </div>
+            <div>
+              <label style={styles.label}>Mobile Number <span style={{ color: '#EF4444' }}>*</span></label>
+              <input
+                style={{ ...styles.input, borderColor: errors.mobile ? '#EF4444' : undefined }}
+                placeholder="10-digit Indian mobile"
+                value={form.mobile}
+                onChange={(e) => set('mobile', e.target.value.replace(/\D/g, '').slice(0, 10))}
+                maxLength={10}
+              />
+              {errors.mobile && <span style={{ fontSize: 12, color: '#EF4444', marginTop: 4 }}>{errors.mobile}</span>}
+            </div>
+            <div>
+              <label style={styles.label}>Email Address</label>
+              <input
+                style={{ ...styles.input, borderColor: errors.email ? '#EF4444' : undefined }}
+                placeholder="your@email.com"
+                type="email"
+                value={form.email}
+                onChange={(e) => set('email', e.target.value)}
+              />
+              {errors.email && <span style={{ fontSize: 12, color: '#EF4444', marginTop: 4 }}>{errors.email}</span>}
+            </div>
+            <div>
+              <label style={styles.label}>Category <span style={{ color: '#EF4444' }}>*</span></label>
+              <select
+                style={{ ...styles.input, borderColor: errors.category ? '#EF4444' : undefined }}
+                value={form.category}
+                onChange={(e) => set('category', e.target.value)}
+              >
+                <option value="">Select category</option>
+                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+              {errors.category && <span style={{ fontSize: 12, color: '#EF4444', marginTop: 4 }}>{errors.category}</span>}
+            </div>
           </div>
+        </div>
 
-          <div style={{ marginBottom: 18 }}>
-            <label style={styles.label}>Contact Number <span style={{ color: 'var(--brick)', marginLeft: 2 }}>*</span></label>
-            <input className="reg-input" style={styles.input} placeholder="10-digit Indian mobile" value={form.mobile} onChange={(e) => set('mobile', e.target.value.replace(/\D/g, '').slice(0, 10))} />
-            {errors.mobile && <span style={{ color: 'var(--brick)', fontSize: 12, marginTop: 4, display: 'block' }}>{errors.mobile}</span>}
-          </div>
-
-          <div style={{ marginBottom: 18 }}>
-            <label style={styles.label}>Email Address</label>
-            <input className="reg-input" style={styles.input} type="email" placeholder="your@email.com (optional)" maxLength={100} value={form.email} onChange={(e) => set('email', e.target.value)} />
-            {errors.email && <span style={{ color: 'var(--brick)', fontSize: 12, marginTop: 4, display: 'block' }}>{errors.email}</span>}
-          </div>
-
-          <div style={{ marginBottom: 18 }}>
-            <label style={styles.label}>Category <span style={{ color: 'var(--brick)', marginLeft: 2 }}>*</span></label>
-            <select className="reg-input" style={styles.input} value={form.category} onChange={(e) => set('category', e.target.value)}>
-              <option value="">Select category</option>
-              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+        <div style={styles.card}>
+          <h2 style={styles.sectionTitle}>Group Registration</h2>
+          <p style={{ fontSize: 14, color: '#64748B', marginTop: 0, marginBottom: 16 }}>
+            Are you bringing additional family members or colleagues?
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <label style={styles.label}>Number of Accompanying Members</label>
+            <select
+              style={{ ...styles.input, width: 'auto', minWidth: 100 }}
+              value={accompanyingCount}
+              onChange={(e) => handleAccompanyingChange(parseInt(e.target.value))}
+            >
+              {Array.from({ length: MAX_ACCOMPANYING + 1 }, (_, i) => (
+                <option key={i} value={i}>{i}</option>
+              ))}
             </select>
-            {errors.category && <span style={{ color: 'var(--brick)', fontSize: 12, marginTop: 4, display: 'block' }}>{errors.category}</span>}
           </div>
 
-          <div style={{ marginBottom: 18 }}>
-            <label style={styles.label}>Address</label>
-            <input className="reg-input" style={styles.input} placeholder="Enter your full address" maxLength={200} value={form.address} onChange={(e) => set('address', e.target.value)} />
-            {errors.address && <span style={{ color: 'var(--brick)', fontSize: 12, marginTop: 4, display: 'block' }}>{errors.address}</span>}
-          </div>
+          {accompanyingCount > 0 && (
+            <div style={{ marginTop: 24 }}>
+              <label style={styles.label}>Member Names</label>
+              <p style={{ fontSize: 12, color: '#64748B', marginTop: 0 }}>Enter names of accompanying members</p>
+              {Array.from({ length: accompanyingCount }, (_, i) => (
+                <div key={i} style={{ marginBottom: 12 }}>
+                  <input
+                    style={{ ...styles.input, borderColor: errors[`member_${i}`] ? '#EF4444' : undefined }}
+                    placeholder={`Member ${i + 1} Name`}
+                    value={accompanyingNames[i] || ''}
+                    onChange={(e) => handleMemberNameChange(i, e.target.value)}
+                    maxLength={100}
+                  />
+                  {errors[`member_${i}`] && (
+                    <span style={{ fontSize: 12, color: '#EF4444', marginTop: 4 }}>{errors[`member_${i}`]}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
-          <div style={{ marginBottom: 18 }}>
-            <label style={styles.label}>District</label>
-            <input className="reg-input" style={styles.input} placeholder="Enter your district" maxLength={100} value={form.district} onChange={(e) => set('district', e.target.value)} />
-          </div>
+          {accompanyingCount > 0 && (
+            <div style={{ marginTop: 16, padding: '12px 16px', background: '#EFF6FF', borderRadius: 8, border: '1px solid #BFDBFE' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#1E40AF' }}>
+                <strong>Total:</strong> {1 + accompanyingCount} members under one Registration ID
+              </span>
+            </div>
+          )}
+        </div>
 
-          <div style={{ marginBottom: 18 }}>
-            <label style={styles.label}>State <span style={{ color: 'var(--brick)', marginLeft: 2 }}>*</span></label>
-            <select className="reg-input" style={styles.input} value={form.state} onChange={(e) => set('state', e.target.value)}>
-              <option value="">Select state</option>
-              {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-            {errors.state && <span style={{ color: 'var(--brick)', fontSize: 12, marginTop: 4, display: 'block' }}>{errors.state}</span>}
+        <div style={styles.card}>
+          <h2 style={styles.sectionTitle}>Location Details</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={styles.label}>Address</label>
+              <input
+                style={styles.input}
+                placeholder="Enter your address"
+                value={form.address}
+                onChange={(e) => set('address', e.target.value)}
+              />
+            </div>
+            <div>
+              <label style={styles.label}>District / City</label>
+              <input
+                style={styles.input}
+                placeholder="Enter district or city"
+                value={form.district}
+                onChange={(e) => set('district', e.target.value)}
+              />
+            </div>
+            <div>
+              <label style={styles.label}>State <span style={{ color: '#EF4444' }}>*</span></label>
+              <select
+                style={{ ...styles.input, borderColor: errors.state ? '#EF4444' : undefined }}
+                value={form.state}
+                onChange={(e) => set('state', e.target.value)}
+              >
+                <option value="">Select state</option>
+                {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+              {errors.state && <span style={{ fontSize: 12, color: '#EF4444', marginTop: 4 }}>{errors.state}</span>}
+            </div>
           </div>
+        </div>
 
-          <button type="button" className="reg-btn" onClick={handleSubmit} disabled={submitting} style={{ ...styles.btn, ...styles.btnSubmit, width: '100%', marginTop: 28 }}>
-            {submitting ? 'Submitting…' : 'Submit Registration'}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 60 }}>
+          <button
+            type="button"
+            className="reg-btn"
+            onClick={handleSubmit}
+            disabled={submitting}
+            style={{
+              ...styles.btn,
+              ...styles.btnSubmit,
+              width: '100%',
+              marginTop: 28,
+              opacity: submitting ? 0.6 : 1,
+              cursor: submitting ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {submitting ? (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 0.8s linear infinite' }}>
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>
+                Submitting...
+              </span>
+            ) : 'Register Now'}
           </button>
         </div>
       </div>

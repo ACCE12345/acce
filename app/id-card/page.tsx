@@ -108,6 +108,8 @@ function IdCardContent() {
     );
   }
 
+  const members = record.members || [];
+
   return (
     <>
       {banner}
@@ -122,23 +124,36 @@ function IdCardContent() {
           </div>
 
           <div style={styles.idcardBody}>
-            <div style={styles.name}>{record.fullName}</div>
+            <div style={styles.name}>{record.primaryName}</div>
             <div style={styles.role}>{record.category || 'Delegate'}</div>
 
             <div style={styles.photoWrap}>
               <div style={styles.photoCircle}>
-                {record.photo
-                  ? <img src={record.photo} alt={record.fullName} crossOrigin="anonymous" style={{ width: 80, height: 80, display: 'block' }} />
-                  : <span style={{ fontSize: 36, fontWeight: 700, color: '#fff', lineHeight: '74px', textAlign: 'center', display: 'block' }}>{record.fullName.charAt(0)}</span>
-                }
+                <span style={{ fontSize: 36, fontWeight: 700, color: '#fff', lineHeight: '74px', textAlign: 'center', display: 'block' }}>{record.primaryName.charAt(0)}</span>
               </div>
             </div>
 
             <div style={styles.details}>
               <DetailRow label="Reg. ID" value={record.regId} />
-              <DetailRow label="Email" value={record.email} />
-              <DetailRow label="Phone" value={`+91 ${record.mobile}`} />
+              <DetailRow label="Email" value={record.primaryEmail || '---'} />
+              <DetailRow label="Phone" value={`+91 ${record.primaryMobile}`} />
+              <DetailRow label="Total Members" value={String(record.totalMembers)} />
             </div>
+
+            {members.length > 1 && (
+              <div style={{ marginTop: 14, textAlign: 'left', borderTop: '1px dashed rgba(10,38,71,0.12)', paddingTop: 12 }}>
+                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#8A8E96' }}>
+                  Group Members ({members.length})
+                </span>
+                <div style={{ marginTop: 6, fontSize: 12 }}>
+                  {members.map((m, i) => (
+                    <div key={m.id} style={{ padding: '3px 0', borderBottom: '1px solid rgba(10,38,71,0.06)' }}>
+                      {i + 1}. {m.memberName}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div style={styles.perfLine}>
               <span style={styles.perfHoleLeft} />

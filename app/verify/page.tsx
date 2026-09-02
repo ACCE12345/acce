@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, Suspense } from 'react';
+import React, { useState, useCallback, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { verifyBadge } from '@/lib/nexus-store';
@@ -22,15 +22,17 @@ function VerifyContent() {
   const [result, setResult] = useState<'valid' | 'invalid' | null>(null);
   const [record, setRecord] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
+  const autoVerifiedRef = useRef(false);
 
-  const handleVerify = useCallback(async () => {
-    if (!lookupId.trim()) {
+  const handleVerify = useCallback(async (id?: string) => {
+    const targetId = id ?? lookupId;
+    if (!targetId.trim()) {
       showToast('Enter a Registration ID first.', 'error');
       return;
     }
     setLoading(true);
     try {
-      const data = await verifyBadge(lookupId.trim());
+      const data = await verifyBadge(targetId.trim());
       setResult(data.valid ? 'valid' : 'invalid');
       setRecord(data.registration || null);
     } catch {
@@ -40,6 +42,16 @@ function VerifyContent() {
       setLoading(false);
     }
   }, [lookupId, showToast]);
+
+  useEffect(() => {
+    if (regIdParam) {
+      setLookupId(regIdParam);
+      if (!autoVerifiedRef.current) {
+        autoVerifiedRef.current = true;
+        void handleVerify(regIdParam);
+      }
+    }
+  }, [regIdParam, handleVerify]);
 
   return (
     <>
@@ -64,7 +76,7 @@ function VerifyContent() {
               onKeyDown={(e) => e.key === 'Enter' && handleVerify()}
               style={styles.lookupInput}
             />
-            <button className="btn btn-dark" onClick={handleVerify} disabled={loading} style={{ whiteSpace: 'nowrap' }}>
+            <button className="btn btn-dark" onClick={() => handleVerify()} disabled={loading} style={{ whiteSpace: 'nowrap' }}>
               {loading ? 'Verifying…' : 'Verify'}
             </button>
           </div>
@@ -96,7 +108,7 @@ function VerifyContent() {
                 <h2 style={{ color: '#fff', fontSize: 22, margin: 0 }}>Valid Registration</h2>
               </div>
               <div style={styles.verifyBody}>
-                <SummaryRow label="Name" value={record.full_name as string} />
+                <SummaryRow label="Name" value={record.primary_name as string} />
                 <SummaryRow label="Reg. ID" value={record.reg_id as string} />
                 <SummaryRow label="Check-In" value={record.checked_in ? `Checked in${record.checked_in_at ? ' · ' + new Date(record.checked_in_at as string).toLocaleString() : ''}` : 'Not checked in'} />
               </div>

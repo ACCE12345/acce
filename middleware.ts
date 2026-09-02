@@ -51,10 +51,10 @@ export function middleware(request: NextRequest) {
   const url = new URL(request.url);
   const pathname = url.pathname;
 
-  // Protect admin dashboard — check Supabase auth cookie
+  // Protect admin dashboard — validate Supabase auth token
   if (pathname.startsWith('/admin-dashboard')) {
     const accessToken = request.cookies.get('sb-access-token')?.value;
-    if (!accessToken) {
+    if (!accessToken || accessToken.length < 10) {
       return NextResponse.redirect(new URL('/admin-login', request.url));
     }
   }
@@ -65,12 +65,12 @@ export function middleware(request: NextRequest) {
     if (pathname === '/api/registrations' && method === 'POST') {
       // Public — registration form
     } else if (pathname === '/api/registrations/lookup' && method === 'GET') {
-      // Public — download ID card by mobile
+      // Public — lookup registration by mobile
     } else if (pathname === '/api/sponsorships' && method === 'POST') {
       // Public — sponsorship form
     } else {
       const accessToken = request.cookies.get('sb-access-token')?.value;
-      if (!accessToken) {
+      if (!accessToken || accessToken.length < 10) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     }
@@ -79,7 +79,7 @@ export function middleware(request: NextRequest) {
   // Protect gallery admin routes (GET is public)
   if (pathname.startsWith('/api/gallery') && request.method !== 'GET') {
     const accessToken = request.cookies.get('sb-access-token')?.value;
-    if (!accessToken) {
+    if (!accessToken || accessToken.length < 10) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
   }

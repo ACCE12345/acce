@@ -1,34 +1,31 @@
 'use client';
 
+export interface RegistrationMember {
+  id: string;
+  memberName: string;
+  memberMobile: string | null;
+  memberType: 'Primary' | 'Accompanying';
+  createdAt: string;
+}
+
 export interface Registration {
+  id: string;
   regId: string;
-  fullName: string;
-  photo: string;
-  mobile: string;
-  email: string;
+  primaryName: string;
+  primaryMobile: string;
+  primaryEmail: string;
   category: string;
   city: string;
   state: string;
   country: string;
   pin: string;
   isACCEMember: boolean;
+  accompanyingCount: number;
+  totalMembers: number;
   checkedIn: boolean;
   checkedInAt: string | null;
   createdAt: string;
-}
-
-export interface Sponsorship {
-  sponsorId: string;
-  companyName: string;
-  contactPerson: string;
-  phone: string;
-  email: string;
-  website: string;
-  address: string;
-  logo: string;
-  gst: string;
-  requirements: string;
-  createdAt: string;
+  members?: RegistrationMember[];
 }
 
 export interface GalleryImage {
@@ -45,17 +42,10 @@ export interface GalleryImage {
 export interface PaginatedResult<T> {
   items: T[];
   total: number;
+  totalPeople: number;
   page: number;
   limit: number;
   totalPages: number;
-}
-
-export function createAbortController(): { signal: AbortSignal; cancel: () => void } {
-  const controller = new AbortController();
-  return {
-    signal: controller.signal,
-    cancel: () => controller.abort(),
-  };
 }
 
 export async function captureElementAsImage(el: HTMLElement, filename = 'id-card.png'): Promise<void> {
@@ -72,44 +62,36 @@ export async function captureElementAsImage(el: HTMLElement, filename = 'id-card
 
 function regApiToUI(r: Record<string, unknown>): Registration {
   return {
+    id: r.id as string,
     regId: r.reg_id as string,
-    fullName: r.full_name as string,
-    photo: (r.photo_url as string) || '',
-    mobile: r.mobile as string,
-    email: r.email as string,
+    primaryName: r.primary_name as string,
+    primaryMobile: r.primary_mobile as string,
+    primaryEmail: r.primary_email as string,
     category: (r.category as string) || '',
     city: (r.city as string) || '',
     state: (r.state as string) || '',
     country: (r.country as string) || 'India',
     pin: (r.pin as string) || '',
     isACCEMember: r.is_acce_member as boolean,
+    accompanyingCount: r.accompanying_count as number,
+    totalMembers: r.total_members as number,
     checkedIn: r.checked_in as boolean,
     checkedInAt: (r.checked_in_at as string) || null,
     createdAt: r.created_at as string,
+    members: (r.members as Record<string, unknown>[] || []).map(m => ({
+      id: m.id as string,
+      memberName: m.member_name as string,
+      memberMobile: (m.member_mobile as string) || null,
+      memberType: m.member_type as 'Primary' | 'Accompanying',
+      createdAt: m.created_at as string,
+    })),
   };
 }
 
-function spnApiToUI(s: Record<string, unknown>): Sponsorship {
-  return {
-    sponsorId: s.sponsor_id as string,
-    companyName: s.company_name as string,
-    contactPerson: s.contact_person as string,
-    phone: s.phone as string,
-    email: s.email as string,
-    website: (s.website as string) || '',
-    address: (s.address as string) || '',
-    logo: (s.logo_url as string) || '',
-    gst: (s.gst as string) || '',
-    requirements: (s.requirements as string) || '',
-    createdAt: s.created_at as string,
-  };
-}
-
-async function apiFetch<T>(url: string, init?: RequestInit, signal?: AbortSignal): Promise<T> {
+async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
     ...init,
     cache: 'no-store',
-    signal,
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -135,6 +117,7 @@ export async function getRegistrations(params?: {
   const data = await apiFetch<{
     registrations: Record<string, unknown>[];
     total: number;
+    totalPeople?: number;
   }>(`/api/registrations?${sp}`);
 
   const page = params?.page || 1;
@@ -143,45 +126,29 @@ export async function getRegistrations(params?: {
   return {
     items: data.registrations.map(regApiToUI),
     total: data.total || 0,
+    totalPeople: data.totalPeople || 0,
     page,
     limit,
     totalPages: Math.ceil((data.total || 0) / limit),
   };
 }
 
-export async function getRegistrationsFlat(params?: {
-  search?: string;
-  date?: string;
-  limit?: number;
-}): Promise<Registration[]> {
-  const sp = new URLSearchParams();
-  if (params?.search) sp.set('search', params.search);
-  if (params?.date) sp.set('date', params.date);
-  sp.set('limit', String(Math.min(params?.limit || 50, 200)));
-
-  const data = await apiFetch<{
-    registrations: Record<string, unknown>[];
-  }>(`/api/registrations?${sp}`);
-
-  return data.registrations.map(regApiToUI);
-}
-
-export async function getCheckedInRegistrations(limit = 20): Promise<Registration[]> {
-  const sp = new URLSearchParams();
-  sp.set('limit', String(Math.min(limit, 50)));
-  sp.set('checkedIn', 'true');
-
-  const data = await apiFetch<{
-    registrations: Record<string, unknown>[];
-  }>(`/api/registrations?${sp}`);
-
-  return data.registrations.map(regApiToUI);
-}
-
-export async function addRegistration(formData: FormData): Promise<{ regId: string }> {
-  return apiFetch<{ regId: string }>('/api/registrations', {
+export async function addRegistration(data: {
+  primaryName: string;
+  primaryMobile: string;
+  primaryEmail: string;
+  category: string;
+  city: string;
+  state: string;
+  country: string;
+  pin: string;
+  isACCEMember: boolean;
+  accompanyingMembers: { name: string; mobile?: string }[];
+}): Promise<{ regId: string; totalMembers: number }> {
+  return apiFetch<{ regId: string; totalMembers: number }>('/api/registrations', {
     method: 'POST',
-    body: formData,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
   });
 }
 
@@ -205,9 +172,9 @@ export async function findRegistrationByMobile(mobile: string): Promise<Registra
 
 export async function updateRegistration(regId: string, updates: Partial<Registration>): Promise<void> {
   const body: Record<string, unknown> = {};
-  if (updates.fullName !== undefined) body.fullName = updates.fullName;
-  if (updates.mobile !== undefined) body.mobile = updates.mobile;
-  if (updates.email !== undefined) body.email = updates.email;
+  if (updates.primaryName !== undefined) body.primaryName = updates.primaryName;
+  if (updates.primaryMobile !== undefined) body.primaryMobile = updates.primaryMobile;
+  if (updates.primaryEmail !== undefined) body.primaryEmail = updates.primaryEmail;
   if (updates.checkedIn !== undefined) body.checkedIn = updates.checkedIn;
 
   await apiFetch(`/api/registrations/${regId}`, {
@@ -223,46 +190,6 @@ export async function deleteRegistration(regId: string): Promise<void> {
 
 export async function checkIn(regId: string): Promise<void> {
   await apiFetch(`/api/registrations/${regId}/check-in`, { method: 'POST' });
-}
-
-// ── Sponsorships ─────────────────────────────────────
-
-export async function getSponsorships(params?: {
-  search?: string;
-  page?: number;
-  limit?: number;
-}): Promise<PaginatedResult<Sponsorship>> {
-  const sp = new URLSearchParams();
-  if (params?.search) sp.set('search', params.search);
-  sp.set('page', String(params?.page || 1));
-  sp.set('limit', String(Math.min(params?.limit || 50, 200)));
-
-  const data = await apiFetch<{
-    sponsorships: Record<string, unknown>[];
-    total: number;
-  }>(`/api/sponsorships?${sp}`);
-
-  const page = params?.page || 1;
-  const limit = params?.limit || 50;
-
-  return {
-    items: data.sponsorships.map(spnApiToUI),
-    total: data.total || 0,
-    page,
-    limit,
-    totalPages: Math.ceil((data.total || 0) / limit),
-  };
-}
-
-export async function addSponsorship(formData: FormData): Promise<{ sponsorId: string }> {
-  return apiFetch<{ sponsorId: string }>('/api/sponsorships', {
-    method: 'POST',
-    body: formData,
-  });
-}
-
-export async function deleteSponsorship(sponsorId: string): Promise<void> {
-  await apiFetch(`/api/sponsorships/${sponsorId}`, { method: 'DELETE' });
 }
 
 // ── Auth ─────────────────────────────────────────────
@@ -335,6 +262,7 @@ export function debounce<T extends (...args: never[]) => void>(fn: T, ms: number
 export async function getGalleryImages(category?: string): Promise<GalleryImage[]> {
   const sp = new URLSearchParams();
   if (category) sp.set('category', category);
+  sp.set('limit', '100');
   const qs = sp.toString();
   const data = await apiFetch<{ images: GalleryImage[] }>(`/api/gallery${qs ? `?${qs}` : ''}`);
   return data.images || [];

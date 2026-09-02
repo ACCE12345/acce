@@ -19,13 +19,18 @@ export default function AdminLoginPage() {
     async (e: React.FormEvent) => {
       e.preventDefault();
       setLoading(true);
-      const ok = await login(email.trim(), password);
-      if (ok) {
-        showToast('Signed in — redirecting…', 'success');
-        router.push('/admin-dashboard');
-      } else {
+      try {
+        const ok = await login(email.trim(), password);
+        if (ok) {
+          showToast('Signed in — redirecting…', 'success');
+          router.push('/admin-dashboard');
+        } else {
+          showToast('Invalid email or password.', 'error');
+        }
+      } catch {
+        showToast('Connection failed. Please try again.', 'error');
+      } finally {
         setLoading(false);
-        showToast('Invalid email or password.', 'error');
       }
     },
     [email, password, router, showToast]

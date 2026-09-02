@@ -11,10 +11,6 @@ export default function QrCode({ text, size = 120 }: { text: string; size?: numb
     if (!canvasRef.current || !text) return;
     
     const canvas = canvasRef.current;
-    // Ensure canvas has explicit dimensions
-    canvas.width = size;
-    canvas.height = size;
-    
     QRCodeLib.toCanvas(canvas, text, {
       width: size,
       margin: 1,

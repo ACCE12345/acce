@@ -41,8 +41,8 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
       }
 
       if (rec.checkedIn) {
-        showToast(`${rec.fullName} is already checked in.`, 'default');
-        setAlreadyCheckedInName(rec.fullName);
+        showToast(`${rec.primaryName} is already checked in.`, 'default');
+        setAlreadyCheckedInName(rec.primaryName);
         setScanResult(regId);
         setScanStatus('already-checked-in');
         scanStatusRef.current = 'already-checked-in';
@@ -50,7 +50,7 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
       }
 
       await checkIn(regId);
-      showToast(`${rec.fullName} checked in.`, 'success');
+      showToast(`${rec.primaryName} checked in.`, 'success');
       setScanResult(regId);
       setScanStatus('success');
       scanStatusRef.current = 'success';
@@ -102,10 +102,8 @@ export default function BadgeScanner({ onCheckInSuccess }: { onCheckInSuccess?: 
       const decoded = await decodeQRCode(canvas);
 
       if (decoded) {
-        if (/^[A-Z]{3}-/.test(decoded)) {
+        if (/^[A-Z]+-/.test(decoded)) {
           setScanResult(decoded);
-          setScanStatus('success');
-          scanStatusRef.current = 'success';
           clearInterval(scanIntervalRef.current!);
 
           processScan(decoded);

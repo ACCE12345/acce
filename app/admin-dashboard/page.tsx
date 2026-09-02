@@ -8,10 +8,9 @@ import BadgeScanner from '@/components/BadgeScanner';
 import {
   logout,
   getRegistrations,
-  getSponsorships,
+  findRegistration,
   updateRegistration,
   deleteRegistration,
-  deleteSponsorship,
   checkIn,
   toCSV,
   downloadCSV,
@@ -20,12 +19,11 @@ import {
   uploadGalleryImage,
   deleteGalleryImage,
   type Registration,
-  type Sponsorship,
   type GalleryImage,
 } from '@/lib/nexus-store';
 import { useToast } from '@/lib/toast';
 
-type Tab = 'registrations' | 'sponsorships' | 'checkin' | 'gallery';
+type Tab = 'registrations' | 'checkin' | 'gallery';
 type RegModalMode = 'view' | 'edit' | null;
 
 const PAGE_SIZE = 50;
@@ -38,16 +36,12 @@ export default function AdminDashboardPage() {
 
   const [regs, setRegs] = useState<Registration[]>([]);
   const [regTotal, setRegTotal] = useState(0);
+  const [totalPeople, setTotalPeople] = useState(0);
   const [regPage, setRegPage] = useState(1);
+
   const [regSearch, setRegSearch] = useState('');
   const [filterDate, setFilterDate] = useState('');
   const [regModal, setRegModal] = useState<{ mode: RegModalMode; record: Registration | null }>({ mode: null, record: null });
-
-  const [sponsors, setSponsors] = useState<Sponsorship[]>([]);
-  const [spnTotal, setSpnTotal] = useState(0);
-  const [spnPage, setSpnPage] = useState(1);
-  const [spnSearch, setSpnSearch] = useState('');
-  const [spnModal, setSpnModal] = useState<Sponsorship | null>(null);
 
   const [manualId, setManualId] = useState('');
   const [recentCheckins, setRecentCheckins] = useState<Registration[]>([]);
@@ -72,28 +66,13 @@ export default function AdminDashboardPage() {
       setRegs(result.items);
       regsRef.current = result.items;
       setRegTotal(result.total);
+      setTotalPeople(result.totalPeople || 0);
       setRegPage(result.page);
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
       showToast('Failed to load registrations', 'error');
     }
   }, [regPage, regSearch, filterDate, showToast]);
-
-  const refreshSpns = useCallback(async (page?: number, search?: string) => {
-    try {
-      const result = await getSponsorships({
-        page: page || spnPage,
-        limit: PAGE_SIZE,
-        search: search !== undefined ? search : spnSearch,
-      });
-      setSponsors(result.items);
-      setSpnTotal(result.total);
-      setSpnPage(result.page);
-    } catch (err: unknown) {
-      if (err instanceof DOMException && err.name === 'AbortError') return;
-      showToast('Failed to load sponsorships', 'error');
-    }
-  }, [spnPage, spnSearch, showToast]);
 
   const refreshCheckins = useCallback(async () => {
     try {
@@ -104,20 +83,22 @@ export default function AdminDashboardPage() {
       if (!res.ok) return;
       const data = await res.json();
       const items = (data.registrations || []).map((r: Record<string, unknown>) => ({
-        regId: r.reg_id,
-        fullName: r.full_name,
-        photo: r.photo_url || '',
-        mobile: r.mobile,
-        email: r.email,
-        category: r.category || '',
-        city: r.city || '',
-        state: r.state || '',
-        country: r.country || 'India',
-        pin: r.pin || '',
-        isACCEMember: r.is_acce_member,
-        checkedIn: r.checked_in,
-        checkedInAt: r.checked_in_at || null,
-        createdAt: r.created_at,
+        id: r.id as string,
+        regId: r.reg_id as string,
+        primaryName: r.primary_name as string,
+        primaryMobile: r.primary_mobile as string,
+        primaryEmail: r.primary_email as string,
+        category: (r.category as string) || '',
+        city: (r.city as string) || '',
+        state: (r.state as string) || '',
+        country: (r.country as string) || 'India',
+        pin: (r.pin as string) || '',
+        isACCEMember: r.is_acce_member as boolean,
+        accompanyingCount: (r.accompanying_count as number) || 0,
+        totalMembers: (r.total_members as number) || 1,
+        checkedIn: r.checked_in as boolean,
+        checkedInAt: (r.checked_in_at as string) || null,
+        createdAt: r.created_at as string,
       }));
       setRecentCheckins(items);
     } catch { /* ignore */ }
@@ -133,15 +114,14 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     (async () => {
       try {
-        await Promise.allSettled([refreshRegs(), refreshSpns(), refreshCheckins(), loadGallery()]);
+        await Promise.allSettled([refreshRegs(), refreshCheckins(), loadGallery()]);
       } finally {
         setLoading(false);
       }
     })();
-  }, [refreshRegs, refreshSpns, refreshCheckins, loadGallery]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [refreshRegs, refreshCheckins, loadGallery]);
 
   const debouncedRegSearchRef = useRef<((val: string) => void) & { cancel: () => void } | null>(null);
-  const debouncedSpnSearchRef = useRef<((val: string) => void) & { cancel: () => void } | null>(null);
 
   // Initialize debounced functions once
   useEffect(() => {
@@ -154,17 +134,8 @@ export default function AdminDashboardPage() {
       }).catch(() => {});
     }, 400);
 
-    debouncedSpnSearchRef.current = debounce((val: string) => {
-      setSpnPage(1);
-      getSponsorships({ page: 1, limit: PAGE_SIZE, search: val }).then((result) => {
-        setSponsors(result.items);
-        setSpnTotal(result.total);
-      }).catch(() => {});
-    }, 400);
-
     return () => {
       debouncedRegSearchRef.current?.cancel();
-      debouncedSpnSearchRef.current?.cancel();
     };
   }, [filterDate]);
 
@@ -173,26 +144,23 @@ export default function AdminDashboardPage() {
     debouncedRegSearchRef.current?.(val);
   }, []);
 
-  const handleSpnSearchChange = useCallback((val: string) => {
-    setSpnSearch(val);
-    debouncedSpnSearchRef.current?.(val);
-  }, []);
-
   const handleDateChange = useCallback((val: string) => {
     setFilterDate(val);
     setRegPage(1);
     refreshRegs(1, regSearch, val);
   }, [refreshRegs, regSearch]);
 
-  const regStats = useMemo(() => [
-    { label: 'Total Registrations', value: regTotal, cls: '' },
-    { label: 'Loaded', value: regs.length, cls: 'accent' },
-    { label: 'Total Sponsors', value: spnTotal, cls: 'accent' },
-  ], [regTotal, regs.length, spnTotal]);
-
-  const spnStats = useMemo(() => [
-    { label: 'Total Sponsorships', value: spnTotal, cls: '' },
-  ], [spnTotal]);
+  const regStats = useMemo(() => {
+    let totalAccompanying = 0;
+    regsRef.current.forEach((r) => {
+      totalAccompanying += (r.accompanyingCount as number) || 0;
+    });
+    return [
+      { label: 'Total Registrations', value: regTotal, cls: '' },
+      { label: 'Total People', value: totalPeople, cls: 'accent' },
+      { label: 'Total Accompanying', value: totalAccompanying, cls: '' },
+    ];
+  }, [regTotal, totalPeople, regsRef]);
 
   const handleLogout = async () => {
     try {
@@ -209,7 +177,7 @@ export default function AdminDashboardPage() {
       const result = await getRegistrations({ limit: 2000, search: regSearch, date: filterDate });
       if (!result.items.length) { showToast('Nothing to export.', 'error'); return; }
       const columns = [
-        'regId', 'fullName', 'mobile', 'email', 'city', 'state', 'country',
+        'regId', 'primaryName', 'primaryMobile', 'primaryEmail', 'city', 'state', 'country',
         'isACCEMember', 'checkedIn', 'createdAt',
       ];
       downloadCSV('acce-registrations.csv', toCSV(result.items as unknown as Record<string, unknown>[], columns));
@@ -219,30 +187,15 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleExportSpns = async () => {
-    try {
-      const result = await getSponsorships({ limit: 2000, search: spnSearch });
-      if (!result.items.length) { showToast('Nothing to export.', 'error'); return; }
-      const columns = [
-        'sponsorId', 'companyName', 'contactPerson', 'phone', 'email',
-        'website', 'gst', 'createdAt',
-      ];
-      downloadCSV('acce-sponsorships.csv', toCSV(result.items as unknown as Record<string, unknown>[], columns));
-      showToast('CSV exported.', 'success');
-    } catch {
-      showToast('Export failed.', 'error');
-    }
-  };
-
   const handleManualCheckin = async () => {
     const v = manualId.trim();
     if (!v) { showToast('Enter a Registration ID.', 'error'); return; }
-    const rec = regs.find((r) => r.regId === v);
-    if (!rec) { showToast('Registration not found.', 'error'); return; }
-    if (rec.checkedIn) { showToast(`${v} already checked in.`, 'default'); return; }
     try {
+      const rec = await findRegistration(v);
+      if (!rec) { showToast('Registration not found.', 'error'); return; }
+      if (rec.checkedIn) { showToast(`${v} already checked in.`, 'default'); return; }
       await checkIn(v);
-      showToast(`${rec.fullName} checked in.`, 'success');
+      showToast(`${rec.primaryName} checked in.`, 'success');
       setManualId('');
       await Promise.allSettled([refreshRegs(), refreshCheckins()]);
     } catch {
@@ -252,13 +205,19 @@ export default function AdminDashboardPage() {
 
   const [editFields, setEditFields] = useState({ fullName: '', mobile: '', email: '' });
 
-  const openRegModal = (mode: RegModalMode, record: Registration) => {
+  const openRegModal = async (mode: RegModalMode, record: Registration) => {
+    if (mode === 'view') {
+      try {
+        const full = await findRegistration(record.regId);
+        if (full) { setRegModal({ mode, record: full }); return; }
+      } catch { /* fall through */ }
+    }
     setRegModal({ mode, record });
     if (mode === 'edit') {
       setEditFields({
-        fullName: record.fullName,
-        mobile: record.mobile,
-        email: record.email,
+        fullName: record.primaryName,
+        mobile: record.primaryMobile,
+        email: record.primaryEmail,
       });
     }
   };
@@ -268,12 +227,12 @@ export default function AdminDashboardPage() {
   const saveEdit = async () => {
     if (!regModal.record) return;
     if (!/^[6-9]\d{9}$/.test(editFields.mobile)) { showToast('Enter a valid 10-digit mobile number.', 'error'); return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editFields.email)) { showToast('Enter a valid email.', 'error'); return; }
+    if (editFields.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editFields.email)) { showToast('Enter a valid email.', 'error'); return; }
     try {
       await updateRegistration(regModal.record.regId, {
-        fullName: editFields.fullName.trim(),
-        mobile: editFields.mobile.trim(),
-        email: editFields.email.trim(),
+        primaryName: editFields.fullName.trim(),
+        primaryMobile: editFields.mobile.trim(),
+        primaryEmail: editFields.email.trim(),
       });
       showToast(`${regModal.record.regId} updated.`, 'success');
       closeRegModal();
@@ -290,18 +249,6 @@ export default function AdminDashboardPage() {
       showToast(`${regId} deleted.`, 'success');
       closeRegModal();
       await Promise.allSettled([refreshRegs(), refreshCheckins()]);
-    } catch {
-      showToast('Delete failed.', 'error');
-    }
-  };
-
-  const handleDeleteSpnFromModal = async (sponsorId: string) => {
-    if (!confirm(`Delete sponsorship ${sponsorId}? This cannot be undone.`)) return;
-    try {
-      await deleteSponsorship(sponsorId);
-      showToast(`${sponsorId} deleted.`, 'success');
-      setSpnModal(null);
-      await refreshSpns();
     } catch {
       showToast('Delete failed.', 'error');
     }
@@ -338,7 +285,6 @@ export default function AdminDashboardPage() {
   };
 
   const regTotalPages = Math.ceil(regTotal / PAGE_SIZE);
-  const spnTotalPages = Math.ceil(spnTotal / PAGE_SIZE);
 
   if (loading) {
     return (
@@ -363,7 +309,6 @@ export default function AdminDashboardPage() {
           <div style={styles.topBarNav} className="admin-topbar-nav">
             {([
               { id: 'registrations' as Tab, label: 'Registrations' },
-              { id: 'sponsorships' as Tab, label: 'Sponsorships' },
               { id: 'checkin' as Tab, label: 'Check-In' },
               { id: 'gallery' as Tab, label: 'Gallery' },
             ]).map((item) => (
@@ -395,7 +340,7 @@ export default function AdminDashboardPage() {
             <div>
               <div style={styles.statsRow} className="admin-stats-row">
                 {regStats.map((s, i) => (
-                  <div key={i} style={styles.statCard} className={`stat-card ${s.cls}`}>
+                   <div key={i} style={styles.statCard} className={s.cls ? `stat-card ${s.cls}` : 'stat-card'}>
                     <span>{s.label}</span>
                     <strong>{s.value.toLocaleString()}</strong>
                   </div>
@@ -414,8 +359,7 @@ export default function AdminDashboardPage() {
                   <input type="date" value={filterDate} onChange={(e) => handleDateChange(e.target.value)} style={styles.toolbarInput} />
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="btn btn-dark" onClick={handleExportRegs} style={{ minHeight: 40 }}>Export CSV</button>
-                  <button className="btn" onClick={handleLogout} style={{ minHeight: 40, background: 'transparent', color: 'var(--ink)', border: '1px solid var(--line)' }}>Log Out</button>
+                   <button className="btn btn-dark" onClick={handleExportRegs} style={{ minHeight: 40 }}>Export CSV</button>
                 </div>
               </div>
 
@@ -423,20 +367,21 @@ export default function AdminDashboardPage() {
                 <table style={styles.table}>
                   <thead>
                     <tr>
-                      {['Reg. ID', 'Name', 'Phone', 'Email', 'Category', 'ACCE(I)', 'Date', 'Check-in', 'Actions'].map((h) => (
+                      {['Reg. ID', 'Primary Name', 'Members', 'Phone', 'Email', 'Category', 'ACCE(I)', 'Date', 'Check-in', 'Actions'].map((h) => (
                         <th key={h} style={styles.th}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {regs.length === 0 ? (
-                      <tr><td colSpan={9} style={{ textAlign: 'center', color: '#8A8E96', padding: 40 }}>No registrations match your search.</td></tr>
+                      <tr><td colSpan={10} style={{ textAlign: 'center', color: '#8A8E96', padding: 40 }}>No registrations match your search.</td></tr>
                     ) : regs.map((r) => (
                       <tr key={r.regId} style={styles.tr} className="virtual-row">
                         <td style={styles.td}>{r.regId}</td>
-                        <td style={styles.td}>{r.fullName}</td>
-                        <td style={styles.td}>{r.mobile}</td>
-                        <td style={styles.td}>{r.email}</td>
+                        <td style={styles.td}>{r.primaryName}</td>
+                        <td style={styles.td}>{r.totalMembers || 1}</td>
+                        <td style={styles.td}>{r.primaryMobile}</td>
+                        <td style={styles.td}>{r.primaryEmail}</td>
                         <td style={styles.td}>{r.category || '---'}</td>
                         <td style={styles.td}>{r.isACCEMember ? <span style={{ color: 'var(--teal)', fontWeight: 600 }}>Yes</span> : 'No'}</td>
                         <td style={styles.td}>{new Date(r.createdAt).toLocaleDateString()}</td>
@@ -496,107 +441,12 @@ export default function AdminDashboardPage() {
             </div>
           )}
 
-          {/* -- SPONSORSHIPS TAB -- */}
-          {tab === 'sponsorships' && (
-            <div>
-              <div style={styles.statsRow} className="admin-stats-row">
-                {spnStats.map((s, i) => (
-                  <div key={i} style={styles.statCard} className={`stat-card ${s.cls}`}>
-                    <span>{s.label}</span>
-                    <strong>{s.value.toLocaleString()}</strong>
-                  </div>
-                ))}
-              </div>
-
-              <div style={styles.toolbar} className="admin-toolbar-wrap">
-                <div style={styles.filters} className="admin-toolbar-filters">
-                  <input
-                    type="text"
-                    placeholder="Search company, sponsor ID, contact..."
-                    value={spnSearch}
-                    onChange={(e) => handleSpnSearchChange(e.target.value)}
-                    style={styles.toolbarInput}
-                  />
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="btn btn-dark" onClick={handleExportSpns} style={{ minHeight: 40 }}>Export CSV</button>
-                  <button className="btn" onClick={handleLogout} style={{ minHeight: 40, background: 'transparent', color: 'var(--ink)', border: '1px solid var(--line)' }}>Log Out</button>
-                </div>
-              </div>
-
-              <div style={styles.tableWrap} className="admin-table-wrap">
-                <table style={styles.table}>
-                  <thead>
-                    <tr>
-                      {['Sponsor ID', 'Company', 'Contact', 'Phone', 'Email', 'Actions'].map((h) => (
-                        <th key={h} style={styles.th}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sponsors.length === 0 ? (
-                      <tr><td colSpan={6} style={{ textAlign: 'center', color: '#8A8E96', padding: 40 }}>No sponsorship applications match your search.</td></tr>
-                    ) : sponsors.map((s) => (
-                      <tr key={s.sponsorId} style={styles.tr} className="virtual-row">
-                        <td style={styles.td}>{s.sponsorId}</td>
-                        <td style={styles.td}>{s.companyName}</td>
-                        <td style={styles.td}>{s.contactPerson}</td>
-                        <td style={styles.td}>{s.phone}</td>
-                        <td style={styles.td}>{s.email}</td>
-                        <td style={styles.td}>
-                          <button className="action-btn" onClick={() => setSpnModal(s)}>View</button>
-                          <button className="action-btn danger" onClick={() => handleDeleteSpnFromModal(s.sponsorId)}>Delete</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {spnTotalPages > 1 && (
-                <div className="pagination">
-                  <button
-                    className="pagination-btn"
-                    disabled={spnPage <= 1}
-                    onClick={() => { setSpnPage(1); refreshSpns(1); }}
-                  >
-                    &laquo;
-                  </button>
-                  <button
-                    className="pagination-btn"
-                    disabled={spnPage <= 1}
-                    onClick={() => { setSpnPage(spnPage - 1); refreshSpns(spnPage - 1); }}
-                  >
-                    &lsaquo;
-                  </button>
-                  <span className="pagination-info">
-                    Page {spnPage} of {spnTotalPages} ({spnTotal.toLocaleString()} total)
-                  </span>
-                  <button
-                    className="pagination-btn"
-                    disabled={spnPage >= spnTotalPages}
-                    onClick={() => { setSpnPage(spnPage + 1); refreshSpns(spnPage + 1); }}
-                  >
-                    &rsaquo;
-                  </button>
-                  <button
-                    className="pagination-btn"
-                    disabled={spnPage >= spnTotalPages}
-                    onClick={() => { setSpnPage(spnTotalPages); refreshSpns(spnTotalPages); }}
-                  >
-                    &raquo;
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* -- CHECK-IN TAB -- */}
           {tab === 'checkin' && (
             <div>
               <div style={{ marginBottom: 24 }}>
-                <BadgeScanner onCheckInSuccess={() => {
-                  Promise.allSettled([refreshRegs(), refreshCheckins()]);
+                <BadgeScanner onCheckInSuccess={async () => {
+                  await Promise.allSettled([refreshRegs(), refreshCheckins()]);
                 }} />
               </div>
 
@@ -623,7 +473,7 @@ export default function AdminDashboardPage() {
                 ) : recentCheckins.map((r) => (
                   <div key={r.regId} className="recent-item">
                     <div>
-                      <div className="name">{r.fullName}</div>
+                      <div className="name">{r.primaryName}</div>
                       <div className="meta">{r.regId}</div>
                     </div>
                     <div className="meta">{r.checkedInAt ? new Date(r.checkedInAt).toLocaleTimeString() : ''}</div>
@@ -718,15 +568,46 @@ export default function AdminDashboardPage() {
         <div style={styles.modalOverlay} className="admin-modal-wrap gpu-fade" onClick={(e) => { if (e.target === e.currentTarget) closeRegModal(); }}>
           <div style={styles.modalBox} className="admin-modal-box gpu-layer">
             <button onClick={closeRegModal} style={styles.modalClose}>&times;</button>
-            {regModal.record.photo && <img src={regModal.record.photo} alt="" style={styles.modalPhoto} />}
-            <h3 style={{ fontSize: 20, marginBottom: 14 }}>{regModal.record.fullName}</h3>
-            <ModalRow label="Reg. ID" value={regModal.record.regId} />
+            <div style={{ marginBottom: 16, padding: "12px 16px", background: "#EFF6FF", borderRadius: 8, border: "1px solid #BFDBFE" }}>
+    <div style={{ fontSize: 12, color: "#1E40AF", fontFamily: "var(--font-mono)" }}>
+      <strong>Reg ID:</strong> {regModal.record.regId} | <strong>Total Members:</strong> {regModal.record.totalMembers || 1}
+    </div>
+  </div>
+  <h3 style={{ fontSize: 20, marginBottom: 14 }}>{regModal.record.primaryName}</h3>
+            <ModalRow label="Reg ID" value={regModal.record.regId} />
+            <ModalRow label="Primary Mobile" value={regModal.record.primaryMobile} />
             <ModalRow label="Category" value={regModal.record.category || '---'} />
             <ModalRow label="Check-In" value={regModal.record.checkedIn ? `Checked in${regModal.record.checkedInAt ? ' · ' + new Date(regModal.record.checkedInAt).toLocaleString() : ''}` : 'Not checked in'} />
-            <ModalRow label="Mobile" value={regModal.record.mobile} />
-            <ModalRow label="Email" value={regModal.record.email} />
+            
+            <ModalRow label="Email" value={regModal.record.primaryEmail} />
             <ModalRow label="Location" value={`${regModal.record.city}, ${regModal.record.state}, ${regModal.record.country}`} />
-            <ModalRow label="ACCE(I) Member" value={regModal.record.isACCEMember ? 'Yes' : 'No'} />
+            <ModalRow label="ACCE(I) Member" value={regModal.record.isACCEMember ? "Yes" : "No"} />
+            <div style={{ marginTop: 16 }}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--teal)", marginBottom: 8 }}>
+                Members List ({regModal.record.members?.length || regModal.record.totalMembers || 1})
+              </div>
+              {regModal.record.members && regModal.record.members.length > 0 ? (
+                <div style={{ background: "#F9FAFB", borderRadius: 8, padding: 12, maxHeight: 220, overflow: "auto" }}>
+                  {regModal.record.members.map((m, i, arr) => (
+                    <div key={m.id || i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < arr.length - 1 ? "1px solid #E5E7EB" : "none" }}>
+                      <div>
+                        <span style={{ fontSize: 14, fontWeight: 500 }}>{m.memberName}</span>
+                        <span style={{ marginLeft: 8, fontSize: 10, padding: "2px 6px", borderRadius: 4, background: m.memberType === "Primary" ? "#DCFCE7" : "#F3F4F6", color: m.memberType === "Primary" ? "#16a34a" : "#6B7280" }}>
+                          {m.memberType}
+                        </span>
+                      </div>
+                      {m.memberMobile && <span style={{ fontSize: 12, color: "#6B7280", fontFamily: "var(--font-mono)" }}>{m.memberMobile}</span>}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ background: "#F9FAFB", borderRadius: 8, padding: 16, textAlign: "center", color: "#6B7280", fontSize: 13 }}>
+                  Loading members...
+                </div>
+              )}
+            </div>
+
+
             <div style={styles.modalActions} className="admin-modal-actions">
               <button className="btn" style={{ background: 'var(--brick)', color: '#fff' }} onClick={() => handleDeleteFromModal(regModal.record!.regId)}>Delete Member</button>
             </div>
@@ -755,27 +636,6 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* -- Sponsorship View Modal -- */}
-      {spnModal && (
-        <div style={styles.modalOverlay} className="admin-modal-wrap gpu-fade" onClick={(e) => { if (e.target === e.currentTarget) setSpnModal(null); }}>
-          <div style={styles.modalBox} className="admin-modal-box gpu-layer">
-            <button onClick={() => setSpnModal(null)} style={styles.modalClose}>&times;</button>
-            {spnModal.logo && <img src={spnModal.logo} alt="" style={{ ...styles.modalPhoto, borderRadius: 8 }} />}
-            <h3 style={{ fontSize: 20, marginBottom: 14 }}>{spnModal.companyName}</h3>
-            <ModalRow label="Sponsor ID" value={spnModal.sponsorId} />
-            <ModalRow label="Contact" value={spnModal.contactPerson} />
-            <ModalRow label="Phone" value={spnModal.phone} />
-            <ModalRow label="Email" value={spnModal.email} />
-            <ModalRow label="Website" value={spnModal.website || '---'} />
-            <ModalRow label="Address" value={spnModal.address || '---'} />
-            <ModalRow label="GST" value={spnModal.gst || '---'} />
-            <ModalRow label="Requirements" value={spnModal.requirements || '---'} />
-            <div style={styles.modalActions} className="admin-modal-actions">
-              <button className="btn btn-dark" onClick={() => setSpnModal(null)}>Close</button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

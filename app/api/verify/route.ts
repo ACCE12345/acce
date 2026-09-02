@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServer } from '@/lib/supabase/server';
 
-// GET /api/verify?regId=REG-XXXX — public badge verification
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -14,7 +13,7 @@ export async function GET(request: NextRequest) {
     const supabase = getSupabaseServer();
     const { data, error } = await supabase
       .from('registrations')
-      .select('reg_id, full_name, checked_in, checked_in_at, is_acce_member, payment_status')
+      .select('reg_id, primary_name, primary_mobile, category, total_members, checked_in, checked_in_at, is_acce_member')
       .eq('reg_id', regId)
       .single();
 

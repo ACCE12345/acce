@@ -5,16 +5,27 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
   try {
     const { id } = await params;
     const supabase = getSupabaseServer();
-    const { error } = await supabase
+    
+    const { data, error } = await supabase
       .from('registrations')
       .update({ checked_in: true, checked_in_at: new Date().toISOString() })
       .eq('reg_id', id)
-      .eq('checked_in', false);
+      .eq('checked_in', false)
+      .select('id');
 
-    if (error) throw error;
+    if (error) {
+      console.error('Check-in update error:', error);
+      throw error;
+    }
+    
+    if (!data || data.length === 0) {
+      return NextResponse.json({ error: 'Registration not found or already checked in' }, { status: 404 });
+    }
+    
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('Check-in error:', err);
-    return NextResponse.json({ error: 'Check-in failed' }, { status: 500 });
+    const errorMessage = err instanceof Error ? err.message : 'Check-in failed';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
