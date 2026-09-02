@@ -56,6 +56,7 @@ export default function AdminDashboardPage() {
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
   const [galleryFile, setGalleryFile] = useState<File | null>(null);
   const [galleryTitle, setGalleryTitle] = useState('');
+  const [galleryCategory, setGalleryCategory] = useState('events');
   const [galleryUploading, setGalleryUploading] = useState(false);
 
   const regsRef = useRef<Registration[]>([]);
@@ -311,7 +312,7 @@ export default function AdminDashboardPage() {
     if (galleryFile.size > 5 * 1024 * 1024) { showToast('Image must be under 5MB.', 'error'); return; }
     setGalleryUploading(true);
     try {
-      await uploadGalleryImage(galleryFile, galleryTitle);
+      await uploadGalleryImage(galleryFile, galleryTitle, undefined, galleryCategory);
       showToast('Image uploaded.', 'success');
       setGalleryFile(null);
       setGalleryTitle('');
@@ -652,6 +653,14 @@ export default function AdminDashboardPage() {
                     onChange={(e) => setGalleryTitle(e.target.value)}
                     style={styles.manualInput}
                   />
+                  <select
+                    value={galleryCategory}
+                    onChange={(e) => setGalleryCategory(e.target.value)}
+                    style={styles.manualInput}
+                  >
+                    <option value="events">Event Moments</option>
+                    <option value="upcoming">Upcoming Events</option>
+                  </select>
                   <button
                     className="btn btn-gold"
                     onClick={handleGalleryUpload}

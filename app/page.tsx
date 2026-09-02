@@ -22,7 +22,9 @@ const COMMITTEE = [
 
 export default function Home() {
   const [showPoster, setShowPoster] = useState(false);
-  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const [eventImages, setEventImages] = useState<GalleryImage[]>([]);
+  const [upcomingImages, setUpcomingImages] = useState<GalleryImage[]>([]);
+  const [galleryTab, setGalleryTab] = useState<'events' | 'upcoming'>('events');
 
   useEffect(() => {
     const timer = setTimeout(() => setShowPoster(true), 1000);
@@ -30,7 +32,8 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    getGalleryImages().then(setGalleryImages).catch(() => {});
+    getGalleryImages('events').then(setEventImages).catch(() => {});
+    getGalleryImages('upcoming').then(setUpcomingImages).catch(() => {});
   }, []);
 
   return (
@@ -263,15 +266,43 @@ export default function Home() {
       </section>
 
       {/* ── Gallery ── */}
-      {galleryImages.length > 0 && (
+      {(eventImages.length > 0 || upcomingImages.length > 0) && (
         <section className="section" id="gallery" style={{ background: 'var(--paper)' }}>
           <div className="container">
             <div className="section-head" style={{ textAlign: 'center', maxWidth: 640, margin: '0 auto 40px' }}>
               <span className="eyebrow">Gallery</span>
-              <h2>Event Moments</h2>
+              <h2>Event Moments & Upcoming Events</h2>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 20 }}>
+                <button
+                  onClick={() => setGalleryTab('events')}
+                  style={{
+                    padding: '10px 24px', borderRadius: 8, border: '2px solid',
+                    borderColor: galleryTab === 'events' ? 'var(--gold)' : 'var(--line)',
+                    background: galleryTab === 'events' ? 'var(--gold)' : 'transparent',
+                    color: galleryTab === 'events' ? '#fff' : 'var(--ink)',
+                    fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600,
+                    letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
+                  }}
+                >
+                  Event Moments
+                </button>
+                <button
+                  onClick={() => setGalleryTab('upcoming')}
+                  style={{
+                    padding: '10px 24px', borderRadius: 8, border: '2px solid',
+                    borderColor: galleryTab === 'upcoming' ? 'var(--gold)' : 'var(--line)',
+                    background: galleryTab === 'upcoming' ? 'var(--gold)' : 'transparent',
+                    color: galleryTab === 'upcoming' ? '#fff' : 'var(--ink)',
+                    fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600,
+                    letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
+                  }}
+                >
+                  Upcoming Events
+                </button>
+              </div>
             </div>
             <div className="gallery-grid">
-              {galleryImages.map((img) => (
+              {(galleryTab === 'events' ? eventImages : upcomingImages).map((img) => (
                 <div key={img.id} className="gallery-card">
                   <img
                     src={img.image_url}
@@ -286,6 +317,9 @@ export default function Home() {
                   )}
                 </div>
               ))}
+              {(galleryTab === 'events' ? eventImages : upcomingImages).length === 0 && (
+                <p style={{ gridColumn: '1 / -1', textAlign: 'center', color: '#8A8E96', padding: '40px 0' }}>No images yet. Check back soon!</p>
+              )}
             </div>
           </div>
         </section>

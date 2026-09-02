@@ -1,14 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServer } from '@/lib/supabase/server';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get('category') || '';
+
     const supabase = getSupabaseServer();
-    const { data, error } = await supabase
+    let query = supabase
       .from('gallery')
       .select('*')
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false });
+
+    if (category) {
+      query = query.eq('category', category);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.warn('Gallery table may not exist yet:', error.message);
@@ -27,6 +36,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File | null;
     const title = (formData.get('title') as string || '').trim();
     const caption = (formData.get('caption') as string || '').trim();
+    const category = (formData.get('category') as string || 'events').trim();
 
     if (!file || file.size === 0) {
       return NextResponse.json({ error: 'No image file provided' }, { status: 400 });
@@ -59,6 +69,7 @@ export async function POST(request: NextRequest) {
       caption: caption || null,
       image_url: urlData.publicUrl,
       storage_path: filename,
+      category: category || 'events',
       sort_order: 0,
     });
 

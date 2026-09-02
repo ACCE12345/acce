@@ -29,6 +29,9 @@ export const metadata: Metadata = {
   title: 'ACCE (India) — Warangal Centre',
   description:
     'ACCE (India) Warangal Centre: a two-day leadership summit on the build of technology, capital and industry.',
+  icons: {
+    icon: '/icon.png',
+  },
 };
 
 export default function RootLayout({

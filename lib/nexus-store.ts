@@ -37,6 +37,7 @@ export interface GalleryImage {
   caption: string | null;
   image_url: string;
   storage_path: string | null;
+  category: string;
   sort_order: number;
   created_at: string;
 }
@@ -331,16 +332,20 @@ export function debounce<T extends (...args: never[]) => void>(fn: T, ms: number
 
 // ── Gallery ──────────────────────────────────────────
 
-export async function getGalleryImages(): Promise<GalleryImage[]> {
-  const data = await apiFetch<{ images: GalleryImage[] }>('/api/gallery');
+export async function getGalleryImages(category?: string): Promise<GalleryImage[]> {
+  const sp = new URLSearchParams();
+  if (category) sp.set('category', category);
+  const qs = sp.toString();
+  const data = await apiFetch<{ images: GalleryImage[] }>(`/api/gallery${qs ? `?${qs}` : ''}`);
   return data.images || [];
 }
 
-export async function uploadGalleryImage(file: File, title?: string, caption?: string): Promise<void> {
+export async function uploadGalleryImage(file: File, title?: string, caption?: string, category?: string): Promise<void> {
   const formData = new FormData();
   formData.append('file', file);
   if (title) formData.append('title', title);
   if (caption) formData.append('caption', caption);
+  if (category) formData.append('category', category);
 
   const res = await fetch('/api/gallery', { method: 'POST', body: formData });
   if (!res.ok) {
