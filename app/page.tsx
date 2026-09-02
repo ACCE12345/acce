@@ -24,7 +24,6 @@ export default function Home() {
   const [showPoster, setShowPoster] = useState(false);
   const [eventImages, setEventImages] = useState<GalleryImage[]>([]);
   const [upcomingImages, setUpcomingImages] = useState<GalleryImage[]>([]);
-  const [galleryTab, setGalleryTab] = useState<'events' | 'upcoming'>('events');
 
   useEffect(() => {
     const timer = setTimeout(() => setShowPoster(true), 1000);
@@ -243,6 +242,31 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Upcoming Events ── */}
+      {upcomingImages.length > 0 && (
+        <section className="section" id="upcoming-events" style={{ background: 'var(--paper)' }}>
+          <div className="container">
+            <div className="section-head" style={{ textAlign: 'center', maxWidth: 640, margin: '0 auto 40px' }}>
+              <span className="eyebrow">Upcoming</span>
+              <h2>Upcoming Events</h2>
+            </div>
+            <div className="gallery-grid">
+              {upcomingImages.map((img) => (
+                <div key={img.id} className="gallery-card">
+                  <img src={img.image_url} alt={img.title || 'Upcoming event'} className="gallery-img" />
+                  {(img.title || img.caption) && (
+                    <div className="gallery-info">
+                      {img.title && <div className="gallery-title">{img.title}</div>}
+                      {img.caption && <div className="gallery-caption">{img.caption}</div>}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ── Committee ── */}
       <section className="section section-alt" id="committee">
         <div className="container">
@@ -265,63 +289,30 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Gallery ── */}
-      <section className="section" id="gallery" style={{ background: 'var(--paper)' }}>
-        <div className="container">
-          <div className="section-head" style={{ textAlign: 'center', maxWidth: 640, margin: '0 auto 40px' }}>
-            <span className="eyebrow">Gallery</span>
-            <h2>Event Moments & Upcoming Events</h2>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 20 }}>
-              <button
-                onClick={() => setGalleryTab('events')}
-                style={{
-                  padding: '10px 24px', borderRadius: 8, border: '2px solid',
-                  borderColor: galleryTab === 'events' ? 'var(--gold)' : 'var(--line)',
-                  background: galleryTab === 'events' ? 'var(--gold)' : 'transparent',
-                  color: galleryTab === 'events' ? '#fff' : 'var(--ink)',
-                  fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600,
-                  letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
-                }}
-              >
-                Event Moments
-              </button>
-              <button
-                onClick={() => setGalleryTab('upcoming')}
-                style={{
-                  padding: '10px 24px', borderRadius: 8, border: '2px solid',
-                  borderColor: galleryTab === 'upcoming' ? 'var(--gold)' : 'var(--line)',
-                  background: galleryTab === 'upcoming' ? 'var(--gold)' : 'transparent',
-                  color: galleryTab === 'upcoming' ? '#fff' : 'var(--ink)',
-                  fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600,
-                  letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
-                }}
-              >
-                Upcoming Events
-              </button>
+      {/* ── Event Moments ── */}
+      {eventImages.length > 0 && (
+        <section className="section" id="gallery" style={{ background: 'var(--paper)' }}>
+          <div className="container">
+            <div className="section-head" style={{ textAlign: 'center', maxWidth: 640, margin: '0 auto 40px' }}>
+              <span className="eyebrow">Gallery</span>
+              <h2>Event Moments</h2>
+            </div>
+            <div className="gallery-grid">
+              {eventImages.map((img) => (
+                <div key={img.id} className="gallery-card">
+                  <img src={img.image_url} alt={img.title || 'Event photo'} className="gallery-img" />
+                  {(img.title || img.caption) && (
+                    <div className="gallery-info">
+                      {img.title && <div className="gallery-title">{img.title}</div>}
+                      {img.caption && <div className="gallery-caption">{img.caption}</div>}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
-          <div className="gallery-grid">
-            {(galleryTab === 'events' ? eventImages : upcomingImages).map((img) => (
-              <div key={img.id} className="gallery-card">
-                <img
-                  src={img.image_url}
-                  alt={img.title || 'Event photo'}
-                  className="gallery-img"
-                />
-                {(img.title || img.caption) && (
-                  <div className="gallery-info">
-                    {img.title && <div className="gallery-title">{img.title}</div>}
-                    {img.caption && <div className="gallery-caption">{img.caption}</div>}
-                  </div>
-                )}
-              </div>
-            ))}
-            {(galleryTab === 'events' ? eventImages : upcomingImages).length === 0 && (
-              <p style={{ gridColumn: '1 / -1', textAlign: 'center', color: '#8A8E96', padding: '40px 0' }}>No images yet. Check back soon!</p>
-            )}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── Highlights ── */}
       <section className="section section-alt" id="highlights">
