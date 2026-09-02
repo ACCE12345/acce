@@ -73,8 +73,7 @@ export default function RegistrationPage() {
       fd.append('mobile', form.mobile.trim());
       fd.append('email', form.email.trim());
       fd.append('category', form.category);
-      fd.append('address', form.address.trim());
-      fd.append('district', form.district);
+      fd.append('city', form.district.trim());
       fd.append('state', form.state);
 
       const result = await addRegistration(fd);
