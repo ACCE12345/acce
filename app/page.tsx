@@ -316,18 +316,18 @@ export default function Home() {
               <span className="eyebrow">Gallery</span>
               <h2>Event Moments</h2>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
+            <div className="gallery-grid">
               {galleryImages.map((img) => (
-                <div key={img.id} style={{ borderRadius: 12, overflow: 'hidden', background: '#fff', boxShadow: '0 8px 30px -10px rgba(10,38,71,0.18)', transition: 'transform 0.2s ease', cursor: 'pointer' }}>
+                <div key={img.id} className="gallery-card">
                   <img
                     src={img.image_url}
                     alt={img.title || 'Event photo'}
-                    style={{ width: '100%', height: 220, objectFit: 'cover', display: 'block' }}
+                    className="gallery-img"
                   />
                   {(img.title || img.caption) && (
-                    <div style={{ padding: '14px 16px' }}>
-                      {img.title && <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15, color: '#0A2647', marginBottom: 2 }}>{img.title}</div>}
-                      {img.caption && <div style={{ fontSize: 13, color: '#5A6270' }}>{img.caption}</div>}
+                    <div className="gallery-info">
+                      {img.title && <div className="gallery-title">{img.title}</div>}
+                      {img.caption && <div className="gallery-caption">{img.caption}</div>}
                     </div>
                   )}
                 </div>
