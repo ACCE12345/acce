@@ -1,6 +1,5 @@
 'use client';
 
-import { Loader2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function NotFoundPage() {
@@ -18,7 +17,6 @@ export default function NotFoundPage() {
       padding: 32,
     }}>
       <div style={{ width: '100%', maxWidth: 400, textAlign: 'center' }}>
-        <Loader2 style={{ width: 80, height: 80, color: 'var(--ink)' }} />
         <h1 style={{ fontSize: 24, fontWeight: 600, margin: '16px 0' }}>404</h1>
         <p style={{ fontSize: 16, color: 'var(--muted)', marginBottom: '32px' }}>
           Page Not Found
