@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { addRegistration } from '@/lib/nexus-store';
 import { useToast } from '@/lib/toast';
 
@@ -94,9 +93,9 @@ export default function RegistrationPage() {
       <div style={styles.overlay}>
         <div className="reg-popup" style={styles.popup}>
           <div style={{ width: '100%', overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
-            <div style={{ display: 'flex', width: '100%' }}>
-              <Image src="/img/logo.png" alt="Partner" width={200} height={60} style={{ width: '50%', height: 60, objectFit: 'cover' }} />
-              <Image src="/img/2.jpeg" alt="Partner" width={200} height={60} style={{ width: '50%', height: 60, objectFit: 'cover' }} />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, background: 'linear-gradient(135deg, #0A2647, #1D4E86)', padding: '16px 24px' }}>
+              <img src="/img/logo.png" alt="ACCE" style={{ height: 44, width: 'auto' }} />
+              <img src="/img/2.jpeg" alt="Partner" style={{ height: 44, width: 'auto' }} />
             </div>
           </div>
 
