@@ -99,14 +99,11 @@ export default function Home() {
             >
               close
             </button>
-            <Image
-              src="/img/poste.jpeg"
-              alt="ACCE Build Expo 2026 - Event Poster"
-              width={420}
-              height={595}
-              style={{ width: '100%', height: 'auto', display: 'block' }}
-              priority
-            />
+              <img
+                src="/img/poste.jpeg"
+                alt="ACCE Build Expo 2026 - Event Poster"
+                style={{ width: '100%', height: 'auto', display: 'block' }}
+              />
           </div>
         </div>
       )}
@@ -159,13 +156,10 @@ export default function Home() {
               willChange: 'transform',
               backfaceVisibility: 'hidden',
             }}>
-              <Image
+              <img
                 src="/img/poste.jpeg"
                 alt="ACCE Build Expo 2026 - Event Poster"
-                width={320}
-                height={452}
                 style={{ width: '100%', height: 'auto', display: 'block', pointerEvents: 'none' }}
-                priority
               />
             </div>
           </div>
