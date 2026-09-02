@@ -1,6 +1,5 @@
 'use client';
 
-import { H1, P, A } from '@/components/ui';
 import { Loader2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -25,7 +24,7 @@ export default function NotFoundPage() {
           Page Not Found
         </p>
         <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
-          <A
+          <a
             href="/"
             style={{
               color: 'var(--ink)',
@@ -36,8 +35,8 @@ export default function NotFoundPage() {
               fontWeight: 500,
             }>
               Go Home
-          </A>
-          <A
+            </a>
+          <a
             href="/registration"
             style={{
               color: 'var(--brick)',
@@ -48,7 +47,7 @@ export default function NotFoundPage() {
               fontWeight: 500,
             }>
               Register
-            </A>
+            </a>
         </div>
       </div>
     </div>
