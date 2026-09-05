@@ -159,12 +159,48 @@ export default function AdminDashboardPage() {
     try {
       const result = await getRegistrations({ limit: 2000, search: regSearch, date: filterDate });
       if (!result.items.length) { showToast('Nothing to export.', 'error'); return; }
+
+      const rows: Record<string, unknown>[] = [];
+      for (const r of result.items) {
+        const full = await findRegistration(r.regId);
+        const members = full?.members || [];
+        if (members.length === 0) {
+          rows.push({
+            regId: r.regId,
+            memberName: r.primaryName,
+            memberMobile: r.primaryMobile,
+            memberType: 'Primary',
+            category: r.category,
+            city: r.city,
+            state: r.state,
+            isACCEMember: r.isACCEMember,
+            checkedIn: r.checkedIn,
+            createdAt: r.createdAt,
+          });
+        } else {
+          for (const m of members) {
+            rows.push({
+              regId: r.regId,
+              memberName: m.memberName,
+              memberMobile: m.memberMobile || '',
+              memberType: m.memberType,
+              category: r.category,
+              city: r.city,
+              state: r.state,
+              isACCEMember: r.isACCEMember,
+              checkedIn: r.checkedIn,
+              createdAt: r.createdAt,
+            });
+          }
+        }
+      }
+
       const columns = [
-        'regId', 'primaryName', 'primaryMobile', 'primaryEmail', 'city', 'state', 'country',
-        'isACCEMember', 'checkedIn', 'createdAt',
+        'regId', 'memberName', 'memberMobile', 'memberType', 'category',
+        'city', 'state', 'isACCEMember', 'checkedIn', 'createdAt',
       ];
-      downloadCSV('acce-registrations.csv', toCSV(result.items as unknown as Record<string, unknown>[], columns));
-      showToast('CSV exported.', 'success');
+      downloadCSV('acce-registrations.csv', toCSV(rows, columns));
+      showToast(`CSV exported (${rows.length} members).`, 'success');
     } catch {
       showToast('Export failed.', 'error');
     }
