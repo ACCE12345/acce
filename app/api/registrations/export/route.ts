@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('registrations')
-      .select('id, reg_id, primary_name, primary_mobile, primary_email, category, city, state, country, is_acce_member, checked_in, created_at')
+      .select('id, reg_id, primary_name, primary_mobile, primary_email, category, city, state, country, is_acce_member, checked_in, created_at, registration_members(member_name, member_mobile, member_type)')
       .order('created_at', { ascending: false })
       .range(0, 4999);
 
@@ -29,14 +29,8 @@ export async function GET(request: NextRequest) {
     const rows: Record<string, unknown>[] = [];
 
     for (const reg of registrations || []) {
-      const { data: members } = await supabase
-        .from('registration_members')
-        .select('member_name, member_mobile, member_type')
-        .eq('registration_id', reg.id)
-        .order('created_at', { ascending: true });
-
-      const memberList = members || [];
-      if (memberList.length === 0) {
+      const members = (reg as Record<string, unknown>).registration_members as Record<string, unknown>[] || [];
+      if (members.length === 0) {
         rows.push({
           regId: reg.reg_id,
           memberName: reg.primary_name,
@@ -51,7 +45,7 @@ export async function GET(request: NextRequest) {
           createdAt: reg.created_at,
         });
       } else {
-        for (const m of memberList) {
+        for (const m of members) {
           rows.push({
             regId: reg.reg_id,
             memberName: m.member_name,
