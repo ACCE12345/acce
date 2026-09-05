@@ -157,46 +157,16 @@ export default function AdminDashboardPage() {
 
   const handleExportRegs = async () => {
     try {
-      const result = await getRegistrations({ limit: 2000, search: regSearch, date: filterDate });
-      if (!result.items.length) { showToast('Nothing to export.', 'error'); return; }
-
-      const rows: Record<string, unknown>[] = [];
-      for (const r of result.items) {
-        const full = await findRegistration(r.regId);
-        const members = full?.members || [];
-        if (members.length === 0) {
-          rows.push({
-            regId: r.regId,
-            memberName: r.primaryName,
-            memberMobile: r.primaryMobile,
-            memberType: 'Primary',
-            category: r.category,
-            city: r.city,
-            state: r.state,
-            isACCEMember: r.isACCEMember,
-            checkedIn: r.checkedIn,
-            createdAt: r.createdAt,
-          });
-        } else {
-          for (const m of members) {
-            rows.push({
-              regId: r.regId,
-              memberName: m.memberName,
-              memberMobile: m.memberMobile || '',
-              memberType: m.memberType,
-              category: r.category,
-              city: r.city,
-              state: r.state,
-              isACCEMember: r.isACCEMember,
-              checkedIn: r.checkedIn,
-              createdAt: r.createdAt,
-            });
-          }
-        }
-      }
-
+      const sp = new URLSearchParams();
+      if (regSearch) sp.set('search', regSearch);
+      if (filterDate) sp.set('date', filterDate);
+      const res = await fetch(`/api/registrations/export?${sp}`, { cache: 'no-store' });
+      if (!res.ok) throw new Error('Export failed');
+      const data = await res.json();
+      const rows = data.rows || [];
+      if (!rows.length) { showToast('Nothing to export.', 'error'); return; }
       const columns = [
-        'regId', 'memberName', 'memberMobile', 'memberType', 'category',
+        'regId', 'memberName', 'memberMobile', 'memberType', 'email', 'category',
         'city', 'state', 'isACCEMember', 'checkedIn', 'createdAt',
       ];
       downloadCSV('acce-registrations.csv', toCSV(rows, columns));
