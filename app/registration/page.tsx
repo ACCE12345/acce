@@ -121,6 +121,7 @@ export default function RegistrationPage() {
       sessionStorage.setItem('nexus_last_reg', data.regId);
       setShowSuccess(true);
       showToast('Registration successful!', 'success');
+      window.open('https://chat.whatsapp.com/Lac8P28FkLlBNULS2yueGv?s=qt&p=a&mlu=4&ilr=4', '_blank');
     } catch (err: any) {
       const msg = err?.message || 'Something went wrong. Please try again.';
       showToast(typeof msg === 'string' ? msg : 'Something went wrong. Please try again.', 'error');
