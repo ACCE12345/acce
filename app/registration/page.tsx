@@ -123,7 +123,7 @@ export default function RegistrationPage() {
       showToast('Registration successful!', 'success');
       setTimeout(() => {
         window.location.href = 'https://chat.whatsapp.com/Lac8P28FkLlBNULS2yueGv?s=qt&p=a&mlu=4&ilr=4';
-      }, 2000);
+      }, 500);
     } catch (err: any) {
       const msg = err?.message || 'Something went wrong. Please try again.';
       showToast(typeof msg === 'string' ? msg : 'Something went wrong. Please try again.', 'error');
