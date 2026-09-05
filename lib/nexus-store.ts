@@ -43,6 +43,7 @@ export interface PaginatedResult<T> {
   items: T[];
   total: number;
   totalPeople: number;
+  totalAccompanying: number;
   page: number;
   limit: number;
   totalPages: number;
@@ -118,6 +119,7 @@ export async function getRegistrations(params?: {
     registrations: Record<string, unknown>[];
     total: number;
     totalPeople?: number;
+    totalAccompanying?: number;
   }>(`/api/registrations?${sp}`);
 
   const page = params?.page || 1;
@@ -127,6 +129,7 @@ export async function getRegistrations(params?: {
     items: data.registrations.map(regApiToUI),
     total: data.total || 0,
     totalPeople: data.totalPeople || 0,
+    totalAccompanying: data.totalAccompanying || 0,
     page,
     limit,
     totalPages: Math.ceil((data.total || 0) / limit),

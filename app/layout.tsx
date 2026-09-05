@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Fraunces, Public_Sans, IBM_Plex_Mono } from 'next/font/google';
 import { ToastProvider } from '@/lib/toast';
 import ConditionalChrome from '@/components/ConditionalChrome';
+import WhatsAppFloat from '@/components/WhatsAppFloat';
 import './globals.css';
 
 const fraunces = Fraunces({
@@ -46,6 +47,7 @@ export default function RootLayout({
           <ConditionalChrome>
             {children}
           </ConditionalChrome>
+          <WhatsAppFloat />
         </ToastProvider>
       </body>
     </html>

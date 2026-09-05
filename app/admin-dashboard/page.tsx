@@ -37,6 +37,7 @@ export default function AdminDashboardPage() {
   const [regs, setRegs] = useState<Registration[]>([]);
   const [regTotal, setRegTotal] = useState(0);
   const [totalPeople, setTotalPeople] = useState(0);
+  const [totalAccompanying, setTotalAccompanying] = useState(0);
   const [regPage, setRegPage] = useState(1);
 
   const [regSearch, setRegSearch] = useState('');
@@ -54,53 +55,34 @@ export default function AdminDashboardPage() {
   const [galleryUploading, setGalleryUploading] = useState(false);
 
   const regsRef = useRef<Registration[]>([]);
+  const regPageRef = useRef(1);
+  const regSearchRef = useRef('');
+  const filterDateRef = useRef('');
 
   const refreshRegs = useCallback(async (page?: number, search?: string, date?: string) => {
+    const p = page ?? regPageRef.current;
+    const s = search !== undefined ? search : regSearchRef.current;
+    const d = date !== undefined ? date : filterDateRef.current;
     try {
-      const result = await getRegistrations({
-        page: page || regPage,
-        limit: PAGE_SIZE,
-        search: search !== undefined ? search : regSearch,
-        date: date !== undefined ? date : filterDate,
-      });
+      const result = await getRegistrations({ page: p, limit: PAGE_SIZE, search: s, date: d });
       setRegs(result.items);
       regsRef.current = result.items;
       setRegTotal(result.total);
       setTotalPeople(result.totalPeople || 0);
+      setTotalAccompanying(result.totalAccompanying || 0);
       setRegPage(result.page);
+      regPageRef.current = result.page;
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
       showToast('Failed to load registrations', 'error');
     }
-  }, [regPage, regSearch, filterDate, showToast]);
+  }, [showToast]);
 
   const refreshCheckins = useCallback(async () => {
     try {
-      const sp = new URLSearchParams();
-      sp.set('limit', '20');
-      sp.set('checkedIn', 'true');
-      const res = await fetch(`/api/registrations?${sp}`, { cache: 'no-store' });
-      if (!res.ok) return;
-      const data = await res.json();
-      const items = (data.registrations || []).map((r: Record<string, unknown>) => ({
-        id: r.id as string,
-        regId: r.reg_id as string,
-        primaryName: r.primary_name as string,
-        primaryMobile: r.primary_mobile as string,
-        primaryEmail: r.primary_email as string,
-        category: (r.category as string) || '',
-        city: (r.city as string) || '',
-        state: (r.state as string) || '',
-        country: (r.country as string) || 'India',
-        pin: (r.pin as string) || '',
-        isACCEMember: r.is_acce_member as boolean,
-        accompanyingCount: (r.accompanying_count as number) || 0,
-        totalMembers: (r.total_members as number) || 1,
-        checkedIn: r.checked_in as boolean,
-        checkedInAt: (r.checked_in_at as string) || null,
-        createdAt: r.created_at as string,
-      }));
-      setRecentCheckins(items);
+      const result = await getRegistrations({ limit: 20, search: '', date: '' });
+      const checkedInItems = result.items.filter((r) => r.checkedIn);
+      setRecentCheckins(checkedInItems);
     } catch { /* ignore */ }
   }, []);
 
@@ -126,41 +108,42 @@ export default function AdminDashboardPage() {
   // Initialize debounced functions once
   useEffect(() => {
     debouncedRegSearchRef.current = debounce((val: string) => {
+      regPageRef.current = 1;
       setRegPage(1);
-      getRegistrations({ page: 1, limit: PAGE_SIZE, search: val, date: filterDate }).then((result) => {
+      getRegistrations({ page: 1, limit: PAGE_SIZE, search: val, date: filterDateRef.current }).then((result) => {
         setRegs(result.items);
         regsRef.current = result.items;
         setRegTotal(result.total);
+        setTotalPeople(result.totalPeople || 0);
+        setTotalAccompanying(result.totalAccompanying || 0);
       }).catch(() => {});
     }, 400);
 
     return () => {
       debouncedRegSearchRef.current?.cancel();
     };
-  }, [filterDate]);
+  }, []);
 
   const handleRegSearchChange = useCallback((val: string) => {
     setRegSearch(val);
+    regSearchRef.current = val;
     debouncedRegSearchRef.current?.(val);
   }, []);
 
   const handleDateChange = useCallback((val: string) => {
     setFilterDate(val);
+    filterDateRef.current = val;
+    regPageRef.current = 1;
     setRegPage(1);
-    refreshRegs(1, regSearch, val);
-  }, [refreshRegs, regSearch]);
+    refreshRegs(1, regSearchRef.current, val);
+  }, [refreshRegs]);
 
   const regStats = useMemo(() => {
-    let totalAccompanying = 0;
-    regsRef.current.forEach((r) => {
-      totalAccompanying += (r.accompanyingCount as number) || 0;
-    });
     return [
-      { label: 'Total Registrations', value: regTotal, cls: '' },
       { label: 'Total People', value: totalPeople, cls: 'accent' },
       { label: 'Total Accompanying', value: totalAccompanying, cls: '' },
     ];
-  }, [regTotal, totalPeople, regsRef]);
+  }, [totalPeople, totalAccompanying]);
 
   const handleLogout = async () => {
     try {
@@ -331,8 +314,8 @@ export default function AdminDashboardPage() {
 
       <div style={styles.main} className="admin-main-wrap">
           <div style={styles.topbar} className="admin-topbar-wrap">
-            <h1 style={{ margin: 0, fontSize: 26, fontFamily: 'var(--font-display)' }}>Dashboard</h1>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: '#5A6270' }}>Signed in as admin</span>
+            <h1 style={{ margin: 0, fontSize: 30, fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--ink)' }}>Dashboard</h1>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: '#5A6270' }}>Signed in as admin</span>
           </div>
 
           {/* -- REGISTRATIONS TAB -- */}
@@ -395,6 +378,7 @@ export default function AdminDashboardPage() {
                           <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6 }}>
                             <button className="action-btn" onClick={() => openRegModal('view', r)}>View</button>
                             <Link className="action-btn" href={`/id-card?regId=${r.regId}`} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>ID Card</Link>
+                            <button className="action-btn danger" onClick={() => handleDeleteFromModal(r.regId)}>Delete</button>
                           </div>
                         </td>
                       </tr>
@@ -602,14 +586,14 @@ export default function AdminDashboardPage() {
                 </div>
               ) : (
                 <div style={{ background: "#F9FAFB", borderRadius: 8, padding: 16, textAlign: "center", color: "#6B7280", fontSize: 13 }}>
-                  Loading members...
+                  No members found.
                 </div>
               )}
             </div>
 
 
             <div style={styles.modalActions} className="admin-modal-actions">
-              <button className="btn" style={{ background: 'var(--brick)', color: '#fff' }} onClick={() => handleDeleteFromModal(regModal.record!.regId)}>Delete Member</button>
+              <button className="btn" style={{ background: 'var(--brick)', color: '#fff' }} onClick={() => handleDeleteFromModal(regModal.record!.regId)}>Delete Registration</button>
             </div>
             <div style={styles.modalActions} className="admin-modal-actions">
               <button className="btn btn-dark" onClick={closeRegModal}>Close</button>
@@ -642,9 +626,9 @@ export default function AdminDashboardPage() {
 
 function ModalRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="modal-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--line)', fontSize: 13.5 }}>
-      <span style={{ color: '#8A8E96', fontFamily: 'var(--font-mono)', fontSize: 11, textTransform: 'uppercase' }}>{label}</span>
-      <span>{value}</span>
+    <div className="modal-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--line)', fontSize: 14 }}>
+      <span style={{ color: '#5C7086', fontFamily: 'var(--font-mono)', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</span>
+      <span style={{ fontWeight: 500 }}>{value}</span>
     </div>
   );
 }
@@ -744,7 +728,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   statsRow: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridTemplateColumns: 'repeat(2, 1fr)',
     gap: 16,
     marginBottom: 32,
   },
@@ -768,13 +752,14 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: 'wrap',
   },
   toolbarInput: {
-    padding: '10px 12px',
+    padding: '12px 14px',
     border: '1px solid var(--line)',
-    borderRadius: 3,
-    fontSize: 13,
+    borderRadius: 6,
+    fontSize: 14,
     background: '#fff',
     fontFamily: 'var(--font-body)',
-    minWidth: 220,
+    minWidth: 240,
+    minHeight: 44,
   },
   tableWrap: {
     background: '#fff',
@@ -790,24 +775,26 @@ const styles: Record<string, React.CSSProperties> = {
   },
   th: {
     textAlign: 'left',
-    padding: '12px 14px',
+    padding: '14px 16px',
     background: 'var(--ink)',
     color: 'var(--paper)',
     fontFamily: 'var(--font-mono)',
-    fontSize: 10.5,
+    fontSize: 11.5,
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
     whiteSpace: 'nowrap',
     position: 'sticky',
     top: 0,
     zIndex: 1,
+    fontWeight: 600,
   },
   tr: {},
   td: {
-    padding: '11px 14px',
+    padding: '13px 16px',
     borderBottom: '1px solid var(--line)',
     verticalAlign: 'middle',
     whiteSpace: 'nowrap',
+    fontSize: 14,
   },
   recentCard: {
     background: '#fff',

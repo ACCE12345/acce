@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function PATCH(request: NextRequest) {
   try {
     const { id, regId, mobile, name, email, category, city, state, country, pin, isACCEMember, accompanyingCount, totalMembers, checkedIn, checkedInAt, createdAt } = await request.json();
     
@@ -93,6 +93,48 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error('Update registration error:', err);
     const errorMessage = err instanceof Error ? err.message : 'Update failed';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const pathname = new URL(request.url).pathname;
+    const parts = pathname.split('/').filter(p => p.length > 0);
+    const regId = parts[parts.length - 1];
+
+    if (!regId || !regId.startsWith('ACCI-WGL')) {
+      return NextResponse.json({ error: 'Invalid registration ID' }, { status: 400 });
+    }
+
+    const supabase = getSupabaseServer();
+
+    const { data: registration, error: fetchError } = await supabase
+      .from('registrations')
+      .select('id')
+      .eq('reg_id', regId)
+      .single();
+
+    if (fetchError || !registration) {
+      return NextResponse.json({ error: 'Registration not found' }, { status: 404 });
+    }
+
+    await supabase
+      .from('registration_members')
+      .delete()
+      .eq('registration_id', registration.id);
+
+    const { error: deleteError } = await supabase
+      .from('registrations')
+      .delete()
+      .eq('reg_id', regId);
+
+    if (deleteError) throw deleteError;
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error('Delete registration error:', err);
+    const errorMessage = err instanceof Error ? err.message : 'Delete failed';
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
