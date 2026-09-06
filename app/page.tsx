@@ -7,6 +7,7 @@ import HeroSlideshow from '@/components/HeroSlideshow';
 import HeroActions from '@/components/HeroActions';
 import DownloadIdCard from '@/components/DownloadIdCard';
 import CountUp from '@/components/CountUp';
+import Countdown from '@/components/Countdown';
 import { getGalleryImages, type GalleryImage } from '@/lib/nexus-store';
 
 const COMMITTEE = [
@@ -113,57 +114,39 @@ export default function Home() {
       <section className="hero">
         <HeroSlideshow />
         <div className="hero-overlay" />
-        <div className="container hero-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 48, flexWrap: 'wrap', textAlign: 'left', maxWidth: 1100 }}>
-          <div style={{ flex: '1 1 480px', minWidth: 300 }}>
+        <div className="container hero-content">
+          <div className="hero-text">
             <h1 style={{ textAlign: 'left', color: '#E06050', fontSize: 'clamp(28px, 4.5vw, 52px)', lineHeight: 1.1, textShadow: '0 2px 12px rgba(0,0,0,0.4)' }}>Association of Consulting Civil Engineers (India), Warangal Centre</h1>
             <span className="hero-kicker" style={{ color: '#FFFFFF', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, letterSpacing: '0.06em', textTransform: 'none', display: 'inline-block', margin: '18px 0', padding: '10px 24px', background: 'rgba(10,38,71,0.6)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)' }}>25–26 Sep 2026 · Warangal, Telangana, IN</span>
-            <p className="hero-sub" style={{ textAlign: 'left', margin: '0 0 34px' }}>
-              ACCE(India) Build Expo-2026 brings together 10,000+ Consulting Engineers,
-              Architects, Builders, Contractors, Decision-Makers, and Industry Leaders
-              from across Telangana. It is a powerful platform for innovation,
-              collaboration, networking, business growth, and knowledge exchange,
-              showcasing cutting-edge technologies, breakthrough products, and emerging
-              solutions that are shaping the future of construction and the built
-              environment.
-            </p>
-            <div className="hero-meta" style={{ justifyContent: 'flex-start', gap: 40, marginBottom: 36 }}>
-              <div className="hero-stat">
-                <span className="hero-stat-label">Delegates</span>
-                <span className="hero-stat-number"><CountUp end={10000} suffix="+" /></span>
-              </div>
-              <div className="hero-stat">
-                <span className="hero-stat-label">Partner Brands</span>
-                <span className="hero-stat-number"><CountUp end={100} suffix="+" /></span>
-              </div>
-            </div>
-            <HeroActions />
           </div>
-          <div
-            className="hero-poster"
-            onClick={() => setShowPoster(true)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setShowPoster(true); }}
-            style={{ flex: '0 0 auto', display: 'flex', justifyContent: 'center', perspective: '1000px', cursor: 'pointer' }}
-          >
-            <div className="hero-poster-card" style={{
-              borderRadius: 16,
-              overflow: 'hidden',
-              boxShadow: '0 30px 80px -15px rgba(0,0,0,0.55), 0 0 40px rgba(76,163,255,0.15)',
-              border: '3px solid rgba(255,255,255,0.2)',
-              maxWidth: 320,
-              width: '100%',
-              transform: 'rotateY(-4deg)',
-              transition: 'transform 0.4s ease, box-shadow 0.4s ease',
-              willChange: 'transform',
-              backfaceVisibility: 'hidden',
-            }}>
-              <img
-                src="/img/poste.jpeg"
-                alt="ACCE Build Expo 2026 - Event Poster"
-                style={{ width: '100%', height: 'auto', display: 'block', pointerEvents: 'none' }}
-              />
+        </div>
+      </section>
+
+      {/* ── Buttons + Stats ── */}
+      <section className="hero-stats-actions">
+        <div className="container hero-stats-actions-inner">
+          <HeroActions />
+          <div className="hero-meta">
+            <div className="hero-stat">
+              <span className="hero-stat-label">Delegates</span>
+              <span className="hero-stat-number"><CountUp end={10000} suffix="+" /></span>
             </div>
+            <div className="hero-stat">
+              <span className="hero-stat-label">Partner Brands</span>
+              <span className="hero-stat-number"><CountUp end={100} suffix="+" /></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Countdown ── */}
+      <Countdown targetDate="2026-09-25T09:00:00+05:30" />
+
+      {/* ── Poster ── */}
+      <section className="poster-section" onClick={() => setShowPoster(true)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setShowPoster(true); }}>
+        <div className="container poster-section-inner">
+          <div className="hero-poster-card">
+            <img src="/img/poste.jpeg" alt="ACCE Build Expo 2026 - Event Poster" />
           </div>
         </div>
       </section>
@@ -172,12 +155,13 @@ export default function Home() {
       <section className="section" id="about">
         <div className="container intro-grid">
           <div>
-            <span className="eyebrow">About the Build Expo-2026</span>
+            <span className="eyebrow">About Build Expo 2026</span>
             <h2 style={{ fontSize: 'clamp(30px,3.6vw,42px)', marginTop: 18 }}>
-              Two days. One platform. Endless possibilities. Explore what happens when
-              technology, innovation, industry, and investment come together to shape the
-              future of the built environment.
+              Where Technology, Innovation &amp; Industry Converge
             </h2>
+            <p style={{ marginTop: 16, fontSize: 'clamp(14px,2vw,16px)', lineHeight: 1.7 }}>
+              ACCE(India) Build Expo 2026 is the flagship platform connecting 10,000+ consulting engineers, architects, builders, and decision-makers across Telangana and beyond.
+            </p>
           </div>
           <ul className="about-list">
             <li>
