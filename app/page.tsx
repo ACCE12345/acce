@@ -237,7 +237,7 @@ export default function Home() {
             <div className="gallery-grid">
               {upcomingImages.map((img) => (
                 <div key={img.id} className="gallery-card">
-                  <img src={img.image_url} alt={img.title || 'Upcoming event'} className="gallery-img" />
+                  <img src={img.image_url} alt={img.title || 'Upcoming event'} className="gallery-img" loading="lazy" />
                   {(img.title || img.caption) && (
                     <div className="gallery-info">
                       {img.title && <div className="gallery-title">{img.title}</div>}
@@ -284,7 +284,7 @@ export default function Home() {
             <div className="gallery-grid">
               {eventImages.map((img) => (
                 <div key={img.id} className="gallery-card">
-                  <img src={img.image_url} alt={img.title || 'Event photo'} className="gallery-img" />
+                  <img src={img.image_url} alt={img.title || 'Event photo'} className="gallery-img" loading="lazy" />
                   {(img.title || img.caption) && (
                     <div className="gallery-info">
                       {img.title && <div className="gallery-title">{img.title}</div>}

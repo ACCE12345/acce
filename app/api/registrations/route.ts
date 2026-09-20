@@ -158,28 +158,40 @@ export async function GET(request: NextRequest) {
     const { data, error, count } = await query;
     if (error) throw error;
 
-    // Query ALL matching registrations (without pagination) to compute accurate totals
-    let totalsQuery = supabase
-      .from('registrations')
-      .select('total_members, accompanying_count', { count: 'exact' });
+    // Sum ALL matching rows in batches (Supabase caps single query at 1000 rows)
+    let totalPeople = 0;
+    let totalAccompanying = 0;
+    const BATCH = 1000;
+    for (let batchOff = 0; ; batchOff += BATCH) {
+      let batchQuery = supabase
+        .from('registrations')
+        .select('total_members, accompanying_count')
+        .range(batchOff, batchOff + BATCH - 1);
 
-    if (search) {
-      totalsQuery = totalsQuery.or(`primary_name.ilike.%${search}%,reg_id.ilike.%${search}%,primary_mobile.ilike.%${search}%,primary_email.ilike.%${search}%`);
-    }
-    if (date) {
-      const nextDay = new Date(`${date}T00:00:00Z`);
-      nextDay.setDate(nextDay.getDate() + 1);
-      totalsQuery = totalsQuery.gte('created_at', `${date}T00:00:00Z`).lt('created_at', nextDay.toISOString());
-    }
-    if (checkedIn === 'true') {
-      totalsQuery = totalsQuery.eq('checked_in', true);
-    } else if (checkedIn === 'false') {
-      totalsQuery = totalsQuery.eq('checked_in', false);
-    }
+      if (search) {
+        batchQuery = batchQuery.or(`primary_name.ilike.%${search}%,reg_id.ilike.%${search}%,primary_mobile.ilike.%${search}%,primary_email.ilike.%${search}%`);
+      }
+      if (date) {
+        const nextDay = new Date(`${date}T00:00:00Z`);
+        nextDay.setDate(nextDay.getDate() + 1);
+        batchQuery = batchQuery.gte('created_at', `${date}T00:00:00Z`).lt('created_at', nextDay.toISOString());
+      }
+      if (checkedIn === 'true') {
+        batchQuery = batchQuery.eq('checked_in', true);
+      } else if (checkedIn === 'false') {
+        batchQuery = batchQuery.eq('checked_in', false);
+      }
 
-    const { data: totalsData } = await totalsQuery;
-    const totalPeople = (totalsData || []).reduce((sum: number, r: Record<string, unknown>) => sum + ((r.total_members as number) || 1), 0);
-    const totalAccompanying = (totalsData || []).reduce((sum: number, r: Record<string, unknown>) => sum + ((r.accompanying_count as number) || 0), 0);
+      const { data: batchData, error: batchError } = await batchQuery;
+      if (batchError) throw batchError;
+      if (!batchData || batchData.length === 0) break;
+      for (const r of batchData) {
+        const rec = r as unknown as Record<string, unknown>;
+        totalPeople += (rec.total_members as number) || 1;
+        totalAccompanying += (rec.accompanying_count as number) || 0;
+      }
+      if (batchData.length < BATCH) break;
+    }
 
     return NextResponse.json({ registrations: data, total: count, totalPeople, totalAccompanying }, {
       status: 200,

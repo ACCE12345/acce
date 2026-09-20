@@ -5,10 +5,10 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category') || '';
-    const limit = searchParams.get('limit') || '100';
+    const limit = Math.min(parseInt(searchParams.get('limit') || '12', 10) || 12, 20);
 
     const supabase = getSupabaseServer();
-    let query = supabase.from('gallery').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: false }).limit(parseInt(limit, 10));
+    let query = supabase.from('gallery').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: false }).limit(limit);
     if (category) {
       query = query.eq('category', category);
     }
@@ -17,7 +17,9 @@ export async function GET(request: NextRequest) {
       console.error('Gallery fetch error:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    return NextResponse.json({ images: data || [] });
+    return NextResponse.json({ images: data || [] }, {
+      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' },
+    });
   } catch (err) {
     console.error('Gallery GET error:', err);
     return NextResponse.json({ error: 'Failed to fetch gallery' }, { status: 500 });

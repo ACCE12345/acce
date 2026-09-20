@@ -140,10 +140,10 @@ export default function AdminDashboardPage() {
 
   const regStats = useMemo(() => {
     return [
-      { label: 'Total People', value: totalPeople, cls: 'accent' },
-      { label: 'Total Accompanying', value: totalAccompanying, cls: '' },
+      { label: 'Total Registrations', value: regTotal, cls: '' },
+      { label: 'Total People (incl. accompanying)', value: totalPeople, cls: 'accent' },
     ];
-  }, [totalPeople, totalAccompanying]);
+  }, [regTotal, totalPeople]);
 
   const handleLogout = async () => {
     try {

@@ -262,13 +262,23 @@ export function debounce<T extends (...args: never[]) => void>(fn: T, ms: number
 
 // ── Gallery ──────────────────────────────────────────
 
-export async function getGalleryImages(category?: string): Promise<GalleryImage[]> {
+export function toOptimizedGalleryUrl(url: string, width = 800): string {
+  // Use Supabase Image Transformation to cut cached egress ~10x (5MB -> ~100KB)
+  // /object/public/... -> /render/image/public/...?width=800&quality=70&resize=contain
+  if (!url || !url.includes('/storage/v1/object/public/')) return url;
+  return url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') + `?width=${width}&quality=70&resize=contain`;
+}
+
+export async function getGalleryImages(category?: string, limit = 12): Promise<GalleryImage[]> {
   const sp = new URLSearchParams();
   if (category) sp.set('category', category);
-  sp.set('limit', '100');
+  sp.set('limit', String(Math.min(limit, 20)));
   const qs = sp.toString();
   const data = await apiFetch<{ images: GalleryImage[] }>(`/api/gallery${qs ? `?${qs}` : ''}`);
-  return data.images || [];
+  return (data.images || []).map((img) => ({
+    ...img,
+    image_url: toOptimizedGalleryUrl(img.image_url, 800),
+  }));
 }
 
 export async function uploadGalleryImage(file: File, title?: string, caption?: string, category?: string): Promise<void> {

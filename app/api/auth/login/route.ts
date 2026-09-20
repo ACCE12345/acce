@@ -22,17 +22,19 @@ export async function POST(request: NextRequest) {
 
     const response = NextResponse.json({ ok: true, user: data.user });
 
+    const isProd = process.env.NODE_ENV === 'production';
+
     // Set auth cookie
     response.cookies.set('sb-access-token', data.session.access_token, {
       httpOnly: true,
-      secure: true,
+      secure: isProd,
       sameSite: 'lax',
       maxAge: 60 * 60 * 8, // 8 hours
       path: '/',
     });
     response.cookies.set('sb-refresh-token', data.session.refresh_token, {
       httpOnly: true,
-      secure: true,
+      secure: isProd,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/',
