@@ -262,11 +262,9 @@ export function debounce<T extends (...args: never[]) => void>(fn: T, ms: number
 
 // ── Gallery ──────────────────────────────────────────
 
-export function toOptimizedGalleryUrl(url: string, width = 800): string {
-  // Use Supabase Image Transformation to cut cached egress ~10x (5MB -> ~100KB)
-  // /object/public/... -> /render/image/public/...?width=800&quality=70&resize=contain
-  if (!url || !url.includes('/storage/v1/object/public/')) return url;
-  return url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') + `?width=${width}&quality=70&resize=contain`;
+export function toOptimizedGalleryUrl(url: string, _width = 800): string {
+  if (!url) return url;
+  return url;
 }
 
 export async function getGalleryImages(category?: string, limit = 12): Promise<GalleryImage[]> {
