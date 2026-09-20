@@ -140,9 +140,10 @@ export default function AdminDashboardPage() {
 
   const regStats = useMemo(() => {
     return [
-      { label: 'Total People (incl. accompanying)', value: totalPeople, cls: 'accent' },
+      { label: 'Total People (Primary)', value: regTotal, cls: '' },
+      { label: 'Total Accompanying', value: totalAccompanying, cls: 'accent' },
     ];
-  }, [totalPeople]);
+  }, [regTotal, totalAccompanying]);
 
   const handleLogout = async () => {
     try {
@@ -733,7 +734,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   statsRow: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(1, 1fr)',
+    gridTemplateColumns: 'repeat(2, 1fr)',
     gap: 16,
     marginBottom: 32,
   },
