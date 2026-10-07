@@ -818,11 +818,34 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
   content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
   background:linear-gradient(90deg,transparent,var(--gold-bright),transparent);
 }
-.countdown-inner{position:relative;z-index:1;}
-.countdown-heading{
-  font-family:var(--font-body);font-size:clamp(20px,4vw,28px);
-  color:var(--paper);margin:0 0 32px;font-weight:700;letter-spacing:0.02em;
+.countdown-inner{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;}
+.event-held-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--font-body);font-size:13px;font-weight:800;
+  letter-spacing:0.14em;text-transform:uppercase;color:#0A2647;
+  background:linear-gradient(135deg,#7CACE3,#4484D1);
+  background:#fff;
+  border:2px solid var(--gold-bright);
+  padding:8px 20px;border-radius:999px;margin-bottom:18px;
+  box-shadow:0 6px 24px -6px rgba(0,0,0,0.45);
 }
+.countdown-heading{
+  font-family:var(--font-body);font-size:clamp(26px,5vw,40px);
+  color:#FFFFFF;margin:0 0 22px;font-weight:800;letter-spacing:0.01em;
+  text-shadow:0 2px 14px rgba(0,0,0,0.45);
+}
+.countdown-date-banner{
+  display:inline-flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;
+  background:#FFFFFF;color:#0A2647;
+  font-family:var(--font-body);
+  font-size:clamp(17px,3.4vw,24px);font-weight:800;letter-spacing:0.02em;
+  padding:16px 34px;border-radius:999px;
+  border:3px solid var(--gold-bright);
+  box-shadow:0 12px 34px -8px rgba(0,0,0,0.5);
+  max-width:100%;
+}
+.countdown-date-item{white-space:nowrap;}
+.countdown-date-dot{width:10px;height:10px;border-radius:50%;background:var(--gold);flex-shrink:0;}
 .countdown-grid{
   display:flex;justify-content:center;gap:12px;flex-wrap:nowrap;
 }
@@ -854,8 +877,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
 }
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
 @media (max-width:480px){
-  .countdown-section{padding:36px 0;}
-  .countdown-heading{margin-bottom:20px;font-size:20px;}
+  .countdown-section{padding:44px 0;}
+  .countdown-heading{margin-bottom:18px;font-size:26px;}
+  .countdown-date-banner{gap:8px;padding:14px 20px;font-size:17px;border-width:2px;border-radius:18px;}
+  .countdown-date-dot{width:8px;height:8px;}
   .countdown-grid{gap:6px;}
   .countdown-block{min-width:0;flex:1 1 0;padding:14px 2px;border-radius:10px;}
   .countdown-number{font-size:clamp(28px,9vw,40px);}

@@ -14,7 +14,7 @@ export default function Footer() {
               ACCE(I), Warangal Centre
             </Link>
             <p style={{ marginTop: 16, maxWidth: 280 }}>
-              Association of Consulting Civil Engineers (India) — Warangal Centre. Build Expo 2026, 25–26 Sep 2026.
+              Association of Consulting Civil Engineers (India) — Warangal Centre. Build Expo 2026 was held on 25–26 Sep 2026.
             </p>
           </div>
 
@@ -23,7 +23,7 @@ export default function Footer() {
             <ul>
               <li><Link href="/#about">About</Link></li>
               <li><Link href="/#highlights">Highlights</Link></li>
-              <li><Link href="/registration">Register</Link></li>
+              <li><Link href="/memories">Event Memories</Link></li>
             </ul>
           </div>
 
@@ -32,8 +32,8 @@ export default function Footer() {
             <ul>
               <li><Link href="/#about">About</Link></li>
               <li><Link href="/#highlights">Highlights</Link></li>
-              <li><Link href="/registration">Register</Link></li>
-              <li><Link href="/#download-id">Download ID Card</Link></li>
+              <li><Link href="/#gallery">Gallery</Link></li>
+              <li><Link href="/#contact">Contact</Link></li>
               <li><Link href="/admin-login">Admin</Link></li>
             </ul>
           </div>

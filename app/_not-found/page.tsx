@@ -12,7 +12,6 @@ export default function NotFoundPage() {
         <p style={{ fontSize: 16, color: 'var(--muted)', marginBottom: '32px' }}>Page Not Found</p>
         <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
           <a href="/" style={{ margin: '0 auto', display: 'inline-block', padding: '10px 20px', background: 'var(--brick)', color: 'var(--ink)', borderRadius: '6px', textDecoration: 'none', fontWeight: 500 }}>Go Home</a>
-          <a href="/registration" style={{ margin: '0 auto', display: 'inline-block', padding: '10px 20px', background: 'var(--gold)', color: 'var(--ink)', borderRadius: '6px', textDecoration: 'none', fontWeight: 500 }}>Register</a>
         </div>
       </div>
     </div>

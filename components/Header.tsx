@@ -6,9 +6,8 @@ import { usePathname } from 'next/navigation';
 
 const NAV_LINKS = [
   { href: '/#about', label: 'About' },
-  { href: '/#gallery', label: 'Gallery' },
+  { href: '/memories', label: 'Memories' },
   { href: '/#contact', label: 'Contact' },
-  { href: '/#download-id', label: 'Download ID' },
   { href: '/admin-login', label: 'Admin' },
 ];
 
@@ -60,12 +59,6 @@ export default function Header() {
         </ul>
 
         <div className="nav-cta">
-          <Link href="/#download-id" className="btn btn-outline download-id-btn">
-            Download ID
-          </Link>
-          <Link href="/registration" className="btn btn-red btn-ticket">
-            Register<span className="hide-mobile"> Now</span>
-          </Link>
           <button
             className="nav-toggle"
             aria-label="Toggle menu"
